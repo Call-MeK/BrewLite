@@ -11,6 +11,8 @@ frontend/out/
 backend/dist/
 
 # Environment
+.env*
+!.env.example
 .env
 .env.local
 .env.development
@@ -32,3 +34,7 @@ backend/.env.local
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated checks
+coverage/
+*.tsbuildinfo
