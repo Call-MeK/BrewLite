@@ -1,0 +1,3 @@
+Git
+npm
+Nodejs >= 20.9
