@@ -153,16 +153,33 @@ Implement \`MockPaymentGateway\` interface injected into PaymentService. In test
 
 Every task DoD: builds, typecheck/lint as configured, input validation, relevant tests passing, PR peer review, README/run instructions updated, basic UI loading/empty/error states. CI GitHub Actions runs install with lockfiles, lint, build, unit tests and DB integration tests with PostgreSQL service. DB migration test covers unique/partial indexes.
 
-## 11. Scrum plan — 4 weeks, 6 members
+## 11. Team assignments (confirmed) & Scrum plan — 4 weeks, 6 members
 
-| Sprint | Goal | Ownership proposal | Demonstration |
+### 11.1. Official team roles (đã chốt ngày 09/10/2026)
+
+The following member-to-role mappings are **officially confirmed by the team**. Use these mappings, rather than placeholders, when preparing tasks, agent prompts, PR reviewers, and the implementation plan. Preserve the responsibility boundaries; reassignment requires an explicit team decision.
+
+| Mã | Thành viên | Vai trò / Phạm vi phụ trách (theo phân công đã chốt) | Trạng thái |
 | --- | --- | --- | --- |
-| Week 1 | Requirements, Figma, UML, repo, Prisma setup, GET /products, Menu | TV1 integration; TV2 Product BE; TV4 Menu FE; TV6 BA/QA, all support | Menu from API + diagrams |
-| Week 2 | Product detail, Cart, Auth JWT, POST /orders / stock reserve | TV2 Order+stock; TV3 Auth; TV4 Product Detail; TV5 Cart/Checkout; TV6 tests | Create PENDING Order as authenticated user |
-| Week 3 | Mock Payment, retry, voucher, loyalty, history, FSM | TV3 Payment/Voucher/Loyalty; TV2 FSM/expiry; TV4 history; TV5 payment UI; TV6 tests; TV1 integration | End-to-end PAID and PAYMENT_FAILED |
-| Week 4 | Race/rollback tests, CI, Docker Compose, README, Figma/UML polish, delivery | TV1 integrate; TV2/TV3 backend tests; TV4/TV5 UI fixes; TV6 docs/test & Sprint Review | Full live demo and retrospective |
+| **TV1** | **Anh Khoa** | Leader / Scrum Master / Tech Lead / Integration | **Đã Chốt** |
+| **TV2** | **Tấn Nin** | Backend: Product, Order, Inventory | **Đã Chốt** |
+| **TV3** | **Quốc Anh** | Backend: Auth, Payment, Voucher, Loyalty | **Đã Chốt** |
+| **TV4** | **Hoàng An** | Frontend: Menu, Product Detail, Order History; hỗ trợ Figma | **Đã Chốt** |
+| **TV5** | **Thị Thúy** | Frontend: Cart, Checkout, Payment Confirmation; hỗ trợ Figma | **Đã Chốt** |
+| **TV6** | **Đức Phúc** | BA, QA, Test Cases, UML / Documentation | **Đã Chốt** |
 
-Roles TV1–TV6 are proposals, not names assigned by participant. Reserve ~20% capacity for integration/fixes. Existing 12-week sheets are separate and must not be overwritten.
+**Nguyên tắc phối hợp:** TV1 chịu trách nhiệm điều phối kỹ thuật và tích hợp các phần việc. TV2 và TV3 thống nhất contract giữa Order/Inventory và Payment/Voucher/Loyalty; TV4 và TV5 dùng chung API contract, conventions frontend và trạng thái Cart/Checkout; TV6 kiểm chứng yêu cầu, test cases, UML và tài liệu xuyên suốt. Việc phối hợp hoặc review chéo không tự động thay đổi ownership đã chốt.
+
+### 11.2. Sprint breakdown (dự kiến theo tuần; không thay đổi phân vai)
+
+| Sprint | Goal | Phụ trách theo phân vai TV1–TV6 | Demonstration |
+| --- | --- | --- | --- |
+| Week 1 | Requirements, Figma, UML, repo, Prisma setup, GET /products, Menu | TV1 (Anh Khoa): integration; TV2 (Tấn Nin): Product BE; TV4 (Hoàng An): Menu FE + Figma; TV5 (Thị Thúy): hỗ trợ Figma; TV6 (Đức Phúc): BA/QA/UML; TV3 (Quốc Anh): chuẩn bị Auth contract | Menu from API + diagrams |
+| Week 2 | Product detail, Cart, Auth JWT, POST /orders / stock reserve | TV2 (Tấn Nin): Order/Inventory; TV3 (Quốc Anh): Auth; TV4 (Hoàng An): Product Detail; TV5 (Thị Thúy): Cart/Checkout; TV6 (Đức Phúc): test cases; TV1 (Anh Khoa): integration | Create PENDING Order as authenticated user |
+| Week 3 | Mock Payment, retry, Voucher, Loyalty, Order History, FSM | TV3 (Quốc Anh): Payment/Voucher/Loyalty; TV2 (Tấn Nin): FSM/expiry; TV4 (Hoàng An): Order History; TV5 (Thị Thúy): Payment/Confirmation; TV6 (Đức Phúc): QA/UML; TV1 (Anh Khoa): integration | End-to-end PAID and PAYMENT_FAILED |
+| Week 4 | Concurrency/rollback tests, CI, Docker Compose, README, documentation & delivery | TV1 (Anh Khoa): integration/CI/Compose; TV2 (Tấn Nin) and TV3 (Quốc Anh): backend fixes/tests in owned modules; TV4 (Hoàng An) and TV5 (Thị Thúy): UI polish in owned modules; TV6 (Đức Phúc): QA, test cases, UML/docs | Full live demo and retrospective |
+
+**Status distinction:** The **team-member assignments are confirmed**; this week-by-week breakdown is a planning recommendation to be detailed in Writing Plans and is not independently approved as fixed deadlines. Reserve ~20% capacity for integration/fixes. Existing 12-week Google Sheets remain separate and must not be overwritten.
 
 ## 12. Delivery and operational concerns
 
