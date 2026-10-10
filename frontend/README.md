@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BrewLite frontend
 
-## Getting Started
+Next.js App Router, React, TypeScript và Tailwind CSS. Trang hiện tại là scaffold,
+chưa gọi API nghiệp vụ.
 
-First, run the development server:
+Hướng dẫn đầy đủ và smoke test: [README root](../README.md).
+Yêu cầu Node.js 24 LTS; các lệnh dưới đây chạy bằng PowerShell trong `frontend/`.
+Trên macOS/Linux dùng `npm` và `cp`.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```powershell
+npm.cmd ci
+if (!(Test-Path .env.local)) {
+  Copy-Item .env.example .env.local
+}
+npm.cmd run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở http://localhost:3000. Lệnh dev và start cố định cổng 3000.
+Backend chạy riêng ở http://localhost:3001.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Trong `.env.local`, dùng `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`
+theo spec (origin không có `/api` hoặc dấu `/` cuối). Nếu có env cũ, đổi tên
+`NEXT_PUBLIC_API_URL` thành `NEXT_PUBLIC_API_BASE_URL`, giữ giá trị URL phù hợp.
+Consumer API đọc `process.env.NEXT_PUBLIC_API_BASE_URL` và nối endpoint.
+Không đặt secret vào biến `NEXT_PUBLIC_*` vì chúng công khai trong trình duyệt.
+Khởi động lại dev server sau khi sửa env; build lại khi chạy production.
+Không commit `.env.local`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```powershell
+npm.cmd run lint
+npm.cmd run build
+# Dừng dev server trước khi chạy bản build trên cùng cổng.
+npm.cmd start
+```
