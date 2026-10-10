@@ -39,4 +39,5 @@ Thumbs.db
 coverage/
 *.tsbuildinfo
 
-docs/superpowers
+/.agents
+/docs
