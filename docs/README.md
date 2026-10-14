@@ -1,15 +1,20 @@
 # Tài liệu chuẩn BrewLite — giữa kỳ và cuối kỳ
 
-**Cập nhật:** 13/10/2026. Người dùng đã đồng ý tiếp tục một repo, giữ đầy đủ yêu cầu cả hai bài. Bộ tài liệu dưới đây là nguồn yêu cầu hiện hành để nhóm review và triển khai; chưa xác nhận chức năng hoặc các task chấm điểm đã hoàn thành.
+**Cập nhật:** 14/10/2026. Người dùng đã đồng ý tiếp tục một repo, giữ đầy đủ yêu cầu cả hai bài. Bộ tài liệu dưới đây là nguồn yêu cầu hiện hành để nhóm review và triển khai; chưa xác nhận chức năng hoặc các task chấm điểm đã hoàn thành.
 
-## Đọc theo thứ tự
+## Bắt đầu ở đây
 
-1. [Project chung và bảng đối chiếu toàn bộ A1/A2](superpowers/specs/2026-10-13-brewlite-unified-project-design.md): mục tiêu, kiến trúc đề xuất, 6 người, lộ trình 14 ngày và dự phòng 6 tuần.
-2. [Bối cảnh và phạm vi](requirements/context-and-scope.md): stakeholder, in/out scope, giả định/ràng buộc/rủi ro.
-3. [SRS](requirements/srs.md): FR/NFR, MoSCoW, acceptance criteria, nguồn PDF và quyết định nhóm.
-4. [UC-01 checkout](requirements/use-case-checkout.md): luồng chính, thay thế, ngoại lệ, retry và chính sách dữ liệu.
-5. [UML và trạng thái render](diagrams/README.md): use-case tổng quát, checkout và state machine.
-6. [Ca kiểm thử dự kiến](requirements/test-cases.md) và [ma trận truy vết](traceability-matrix.md): nền để viết test và nối minh chứng về yêu cầu.
+Thành viên mới đọc **Tổng quan → Phân công**, rồi đọc yêu cầu liên quan đến phần mình làm. Hướng dẫn cài đặt/chạy nằm trong [README dự án](../README.md).
+
+| Thứ tự | Tài liệu | Đọc để làm gì? |
+| --- | --- | --- |
+| 1. Tổng quan | [Project chung](project-overview.md) | Nắm mục tiêu, phạm vi hai bài, kiến trúc đề xuất, rubric và lộ trình. |
+| 2. Phân công | [Ai làm gì và phối hợp với ai](team-assignments.md) | Biết phần phụ trách, đầu ra, người phối hợp và cách xác nhận hoàn thành. |
+| 3. Yêu cầu | [Bối cảnh/phạm vi](requirements/context-and-scope.md), [SRS](requirements/srs.md), [Checkout](requirements/use-case-checkout.md) | Hiểu chức năng, tiêu chí đạt, luồng chính và các ca lỗi. |
+| 4. Sơ đồ | [UML](diagrams/README.md) | Xem nguồn sơ đồ, trạng thái render và cách xuất hình. |
+| 5. Kiểm thử | [Test cases](requirements/test-cases.md), [Truy vết](traceability-matrix.md) | Biết cần kiểm tra gì và nối yêu cầu với thiết kế/code/test. |
+
+Frontend/backend làm auth đọc thêm [hợp đồng API auth](auth-contract.md) và đối chiếu SRS trước khi triển khai.
 
 ## Căn cứ và thứ tự ưu tiên
 
@@ -32,7 +37,8 @@ Ghi chú cá nhân mới đặt trong `docs/private/` (đã ignore). Chỉ đưa
 | `docs/requirements/*.md` | Phạm vi, SRS, checkout và ca kiểm thử. |
 | `docs/diagrams/README.md` | Nguồn UML, trạng thái và hướng dẫn render. |
 | `docs/traceability-matrix.md` | Đối chiếu yêu cầu với thiết kế, code và test. |
-| `docs/superpowers/specs/2026-10-13-brewlite-unified-project-design.md` | Thiết kế chung, rubric A1/A2 và phân công nhóm. |
+| `docs/project-overview.md` | Thiết kế chung, rubric A1/A2 và lộ trình. |
+| `docs/team-assignments.md` | Phân công nhóm, phối hợp và tiêu chí bàn giao. |
 | `docs/auth-contract.md` | Hợp đồng API để frontend/backend phối hợp; cần đối chiếu SRS trước khi triển khai, nhất là thời hạn JWT chưa chốt trong baseline. |
 | `frontend/AGENTS.md`, `frontend/CLAUDE.md` | Hướng dẫn công cụ AI của dự án, không phải ghi chú cá nhân hay tài liệu nộp bài. |
 

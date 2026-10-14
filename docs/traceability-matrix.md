@@ -41,7 +41,7 @@ FR-09 (hết hạn 15 phút) đã nghỉ dùng trong baseline; không tái sử 
 | NFR-07 | Bàn giao production có thể phục hồi | ADR/deployment Task 3 cần bổ sung | Docker image/tag, registry nếu cần, CI secrets, deploy/migrate/smoke/rollback | [TC-16](requirements/test-cases.md#tc-16) |
 | NFR-08 | Chứng minh chức năng hoạt động | Use-case/UML → các ca kiểm thử | Test API/UI Sprint 1, unit, integration PostgreSQL, browser E2E | [TC-01](requirements/test-cases.md#tc-01)–[TC-13](requirements/test-cases.md#tc-13) |
 | NFR-09 | Phản hồi nhanh với dữ liệu mẫu | Protocol đo trong SRS; kiến trúc Task 3 | Các API nghiệp vụ và môi trường benchmark | [TC-14](requirements/test-cases.md#tc-14) |
-| NFR-10 | Giảng viên/nhóm truy vết kết quả | Ma trận này và [bảng rubric](superpowers/specs/2026-10-13-brewlite-unified-project-design.md) | Git/PR, tài liệu, report, backlog/burndown, quyền repo | [TC-18](requirements/test-cases.md#tc-18) |
+| NFR-10 | Giảng viên/nhóm truy vết kết quả | Ma trận này và [bảng rubric](project-overview.md) | Git/PR, tài liệu, report, backlog/burndown, quyền repo | [TC-18](requirements/test-cases.md#tc-18) |
 
 ## Quy tắc cập nhật khi triển khai
 

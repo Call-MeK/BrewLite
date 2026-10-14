@@ -1,7 +1,7 @@
-# BrewLite — Project chung cho báo cáo giữa kỳ và cuối kỳ
+# BrewLite — Tổng quan project giữa kỳ và cuối kỳ
 
 **Ngày lập:** 13/10/2026.  
-**Trạng thái:** Người dùng đã đồng ý hướng hợp nhất và yêu cầu giữ đủ hai rubric; bộ yêu cầu cụ thể nằm trong [tài liệu chuẩn](../../README.md). Chưa phải báo cáo kết quả triển khai hoặc xác nhận nghiệm thu.  
+**Trạng thái:** Người dùng đã đồng ý hướng hợp nhất và yêu cầu giữ đủ hai rubric; bộ yêu cầu cụ thể nằm trong [tài liệu chuẩn](README.md). Chưa phải báo cáo kết quả triển khai hoặc xác nhận nghiệm thu.  
 **Thông tin người dùng xác nhận:** Nhóm 6 thành viên; có thể báo cáo sau 2 tuần, chậm nhất khoảng 6 tuần; ưu tiên hoàn thành sớm. Chưa có ngày nộp riêng chính thức cho từng bài.  
 **Mục tiêu:** Một sản phẩm, một codebase, một bộ yêu cầu nhất quán; hai mốc báo cáo và hai checklist nghiệm thu.
 
@@ -20,8 +20,8 @@ Trang dưới đây là **trang vật lý trong PDF**, tính cả bìa và mục
 
 | Ký hiệu | Tài liệu                                                                 | Phần làm căn cứ                                                                                                    |
 | ------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| A1      | [BrewLite-CongNghePhanMem.pdf](../../references/BrewLite-CongNghePhanMem.pdf) | Trang 3–5: Scrum, phạm vi, yêu cầu; trang 6–7: 10 task; trang 7–8: nghiệp vụ, trạng thái, DoD, bàn giao và API.    |
-| A2      | [Assignment2-BrewLite.pdf](../../references/Assignment2-BrewLite.pdf)         | Trang 3: kế thừa A1 và thứ tự task; trang 3–7: yêu cầu từng task; trang 7–8: truy vết, cấu trúc repo và checklist. |
+| A1      | [BrewLite-CongNghePhanMem.pdf](references/BrewLite-CongNghePhanMem.pdf) | Trang 3–5: Scrum, phạm vi, yêu cầu; trang 6–7: 10 task; trang 7–8: nghiệp vụ, trạng thái, DoD, bàn giao và API.    |
+| A2      | [Assignment2-BrewLite.pdf](references/Assignment2-BrewLite.pdf)         | Trang 3: kế thừa A1 và thứ tự task; trang 3–7: yêu cầu từng task; trang 7–8: truy vết, cấu trúc repo và checklist. |
 
 Những mục ghi **“đề xuất”** là quyết định của bản thiết kế này, không phải nội dung được giảng viên quy định trong PDF.
 
@@ -252,18 +252,7 @@ Không dùng khoảng dự phòng để bỏ A1 Task 10 hoặc thay E2E/producti
 
 ### Phân công 6 người
 
-Giữ ranh giới vai trò của spec nhóm đã có. Tên TV5 trong tài liệu cũ không thống nhất giữa “Thị Thúy” và “Thị Thủy”; dùng mã TV5 trong bản này để không tự sửa tên thành viên.
-
-| Thành viên     | Trách nhiệm chính                                   | Đầu ra riêng trong project chung                                                               |
-| -------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| TV1 — Anh Khoa | Điều phối, tích hợp, Scrum Master, môi trường/CI/CD | Backlog, nhánh/PR, cấu trúc repo, Compose, pipeline, release và demo tích hợp.                 |
-| TV2 — Tấn Nin  | Backend Product, Order, Inventory                   | API sản phẩm/đặt đơn, schema/migration liên quan, FSM, transaction/optimistic locking và test. |
-| TV3 — Quốc Anh | Backend Auth, Payment, Promotion, Loyalty           | JWT/bcrypt, mock payment/idempotency, mã giảm/điểm, test và phối hợp hủy đơn với TV2.          |
-| TV4 — Hoàng An | Frontend Menu, Detail, History                      | UI mobile-first, tùy chọn, lịch sử/theo dõi, loading/empty/error và test luồng phụ trách.      |
-| TV5 - Thị Thủy | Frontend Cart, Checkout, Confirmation               | Giỏ, kết nối màn hình auth, payment/retry, giữ giỏ khi lỗi và test UI.                         |
-| TV6 — Đức Phúc | BA, QA, UML, tài liệu                               | SRS/use-case, UML, traceability, test cases/E2E, tổng hợp hai báo cáo và bằng chứng.           |
-
-Dev tự viết test cho code của mình; TV6 không chịu toàn bộ kiểm thử. TV2–TV3 review chéo backend, TV4–TV5 review chéo frontend; TV1 tích hợp, TV6 đối chiếu acceptance criteria. Nội dung kiến trúc/deployment do TV1 cùng các owner cung cấp, TV6 tổng hợp; cần thống nhất người đại diện PO để ưu tiên backlog và nghiệm thu nội bộ.
+Xem [bảng phân công và cách phối hợp](team-assignments.md). Đây là nơi cập nhật trách nhiệm từng thành viên; không duy trì bảng phân công trùng trong tổng quan.
 
 Scrum gồm Planning, Daily ngắn, Review và Retrospective cho từng Sprint; cập nhật điểm còn lại cuối mỗi ngày và vẽ burndown từ dữ liệu thật. A1 gợi ý ba Sprint nhưng không bắt buộc; bản chung giữ **hai Sprint triển khai** của A2. Backlog/story points không đồng nhất với điểm chấm bài.
 
@@ -293,6 +282,6 @@ Hai báo cáo dẫn đến cùng mã nguồn và tài liệu chuẩn, nhưng ch�
 
 **Áp dụng Superpowers:** Bản này là đầu ra phân tích và thiết kế chung của Brainstorming. Khi chuyển sang triển khai, dùng bản thiết kế đã thống nhất để lập implementation plan bằng Writing Plans; plan phải chỉ rõ file/caller/config/test bị ảnh hưởng. Sau đó triển khai từng phần nhỏ, review và Verification Before Completion dựa trên kết quả thực tế. Không coi việc tạo tài liệu là đã hợp nhất ứng dụng hoặc đã hoàn thành các task chấm điểm.
 
-**Cập nhật sau khi người dùng đồng ý hợp nhất:** Đã tạo bộ context/SRS/use-case/test cases/traceability trong repo chính, thêm nguồn UML, đánh dấu spec cũ là lịch sử và bỏ Git ignore toàn bộ `docs`. Hai PDF nguồn đã được sao chép nguyên vẹn vào `docs/references`. Trạng thái render UML ghi trong [mục lục sơ đồ](../../diagrams/README.md); không coi nguồn UML là bằng chứng đã có hình kết xuất.
+**Cập nhật sau khi người dùng đồng ý hợp nhất:** Đã tạo bộ context/SRS/use-case/test cases/traceability trong repo chính, thêm nguồn UML, đánh dấu spec cũ là lịch sử và bỏ Git ignore toàn bộ `docs`. Hai PDF nguồn đã được sao chép nguyên vẹn vào `docs/references`. Trạng thái render UML ghi trong [mục lục sơ đồ](diagrams/README.md); không coi nguồn UML là bằng chứng đã có hình kết xuất.
 
 **Giới hạn hiện tại:** Chưa chuyển thư mục code, viết chức năng, chạy test ứng dụng, commit/push, tạo PR hoặc deploy. Tài liệu mới cần review nhóm và Git history thực để nghiệm thu. Chưa xác minh điều kiện/giá hosting; nền tảng production phải được kiểm tra ở Task 3. Các mục đề xuất kỹ thuật ngoài PDF vẫn là quyết định nhóm, không phải yêu cầu bổ sung do giảng viên đưa ra.

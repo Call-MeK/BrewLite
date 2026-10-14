@@ -1,6 +1,6 @@
 # UML — baseline chung BrewLite
 
-Nguồn chuẩn: [SRS](../requirements/srs.md), [UC-01](../requirements/use-case-checkout.md) và [thiết kế chung, mục 5](../superpowers/specs/2026-10-13-brewlite-unified-project-design.md). Đây là tài liệu thiết kế; chưa phải bằng chứng chức năng đã chạy.
+Nguồn chuẩn: [SRS](../requirements/srs.md), [UC-01](../requirements/use-case-checkout.md) và [thiết kế chung, mục 5](../project-overview.md). Đây là tài liệu thiết kế; chưa phải bằng chứng chức năng đã chạy.
 
 | Nguồn PlantUML | Nội dung | Bản xuất |
 |---|---|---|

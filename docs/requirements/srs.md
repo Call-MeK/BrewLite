@@ -5,7 +5,7 @@
 **Trạng thái:** Baseline yêu cầu đã hòa giải; **chưa nghiệm thu bất kỳ tiêu chí sản phẩm nào**. Tài liệu mô tả hành vi phải xây dựng, không khẳng định chức năng, test, CI/CD hay production đã hoạt động.  
 **Kế hoạch nhóm:** 6 thành viên; mục tiêu hoàn thành trong 14 ngày, dự phòng tối đa khoảng 6 tuần. Đây là kế hoạch người dùng xác nhận, không phải hạn nộp trong PDF.
 
-Tài liệu liên quan: [Bối cảnh và phạm vi](context-and-scope.md), [UC-01: Đặt và thanh toán đơn](use-case-checkout.md), [ma trận truy vết](../traceability-matrix.md), [thiết kế chung](../superpowers/specs/2026-10-13-brewlite-unified-project-design.md).
+Tài liệu liên quan: [Bối cảnh và phạm vi](context-and-scope.md), [UC-01: Đặt và thanh toán đơn](use-case-checkout.md), [ma trận truy vết](../traceability-matrix.md), [thiết kế chung](../project-overview.md).
 
 ## 1. Nguồn và quy ước
 
@@ -13,7 +13,7 @@ Tài liệu liên quan: [Bối cảnh và phạm vi](context-and-scope.md), [UC-
 |---|---|---|
 | A1 | [BrewLite-CongNghePhanMem.pdf](../references/BrewLite-CongNghePhanMem.pdf) | Trang 3–5: Scrum, phạm vi, yêu cầu; trang 6–7: 10 task; trang 7–8: nghiệp vụ, trạng thái, DoD, bàn giao và API. |
 | A2 | [Assignment2-BrewLite.pdf](../references/Assignment2-BrewLite.pdf) | Trang 3: kế thừa A1, công nghệ và thứ tự task; trang 4–7: tạo phẩm và tiêu chí từng task; trang 7–8: truy vết, bàn giao và checklist. |
-| Nhóm | [Thiết kế chung ngày 13/10/2026](../superpowers/specs/2026-10-13-brewlite-unified-project-design.md) | Chính sách thiết kế để làm rõ điều PDF chưa quy định; không gán các chính sách này cho giảng viên. |
+| Nhóm | [Thiết kế chung ngày 13/10/2026](../project-overview.md) | Chính sách thiết kế để làm rõ điều PDF chưa quy định; không gán các chính sách này cho giảng viên. |
 
 Mọi số trang dưới đây là **trang vật lý trong PDF**, tính cả bìa và mục lục. Số in ở chân trang lệch một trang. Ví dụ A1 trang vật lý 8 có số in 7.
 
