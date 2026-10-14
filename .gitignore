@@ -30,7 +30,7 @@ backend/.env.local
 # IDE
 .vscode/
 .idea/
-
+.history
 # OS
 .DS_Store
 Thumbs.db
