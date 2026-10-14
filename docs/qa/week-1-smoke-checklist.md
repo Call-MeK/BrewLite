@@ -1,7 +1,5 @@
 # BrewLite — Smoke checklist và kết quả Week 1
 
-> **Báo cáo lịch sử:** Do Đức Phúc cung cấp, ghi nhận lần chạy ngày 10/10/2026 tại commit `fff2606`. Hợp nhất vào `docs` ngày 15/10/2026; chưa chạy lại hoặc kiểm chứng log gốc. Giữ nguyên kết quả bên dưới, không dùng để kết luận trạng thái code hiện tại. Ca kiểm thử nghiệm thu hiện hành: [test cases](../requirements/test-cases.md).
-
 **Owner:** Đức Phúc (TV6 — QA)  
 **Phạm vi:** cài/chạy, scaffold, `GET /products`, Menu và các trạng thái dữ liệu  
 **Nguyên tắc:** chỉ ghi `PASS` sau khi đã chạy; chức năng chưa tồn tại là `FAIL`, ca chưa thể tạo tiền điều kiện là `BLOCKED`.

@@ -38,6 +38,12 @@ BrewLite/
 └── .git/
 ```
 
+## Tài liệu BA/QA/UML
+
+- [Baseline yêu cầu Week 1](docs/requirements/week-1-requirements.md)
+- [UML và ERD](docs/uml/brewlite-uml.md)
+- [Smoke checklist và kết quả Week 1](docs/qa/week-1-smoke-checklist.md)
+
 Chỉ có một Git repository ở root. Không chạy `git init` trong frontend hoặc backend.
 
 ## Chạy local
