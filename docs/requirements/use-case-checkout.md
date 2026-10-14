@@ -10,6 +10,7 @@
 - Thành phần tham gia trong BrewLite: Next.js UI, NestJS API, PostgreSQL, Mock Payment. Mock nội bộ không phải actor bên ngoài toàn hệ thống.
 - Trigger: Khách chọn đặt hàng/thanh toán từ giỏ có sản phẩm.
 - Sơ đồ phạm vi: [nguồn UML checkout](../diagrams/use-case-checkout.puml). Sơ đồ chung: [use-cases.puml](../diagrams/use-cases.puml).
+- Luồng chi tiết: [activity](../diagrams/activity-checkout.puml), [sequence](../diagrams/sequence-checkout.puml); bản nháp hòa giải ngày 15/10, chưa render/review.
 
 ## Preconditions — Tiền điều kiện
 

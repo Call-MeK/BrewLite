@@ -1,0 +1,111 @@
+@startuml
+title BrewLite — Class nghiệp vụ (bản nháp 15/10/2026)
+hide empty methods
+class User {
+  id: UUID
+  email: string
+  passwordHash: string
+  loyaltyPoints: int
+}
+class Product {
+  id: UUID
+  name: string
+  imageUrl: string
+  basePrice: int
+  stock: int
+  version: int
+}
+class Order {
+  id: UUID
+  userId: UUID
+  status: OrderStatus
+  inventoryStatus: InventoryStatus
+  subtotal: int
+  discount: int
+  total: int
+  creationIdempotencyKey: UUID
+  requestHash: string
+  version: int
+  createdAt: datetime
+}
+class OrderItem {
+  id: UUID
+  quantity: int
+  productNameSnapshot: string
+  sizeCode: string
+  sizePriceSnapshot: int
+  unitPrice: int
+  lineTotal: int
+}
+class Payment {
+  id: UUID
+  userId: UUID
+  idempotencyKey: UUID
+  requestHash: string
+  amount: int
+  method: PaymentMethod
+  status: PaymentStatus
+}
+class Promotion {
+  id: UUID
+  code: string
+  amount: int
+  minOrderValue: int
+  isActive: boolean
+  validFrom: datetime
+  expiresAt: datetime
+}
+class LoyaltyTransaction {
+  id: UUID
+  kind: LoyaltyKind
+  points: int
+  createdAt: datetime
+}
+enum OrderStatus {
+  PENDING
+  PAYMENT_FAILED
+  PAID
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+enum InventoryStatus {
+  RESERVED
+  COMMITTED
+  RELEASED
+}
+enum PaymentMethod {
+  WALLET
+  CARD
+}
+enum PaymentStatus {
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+enum LoyaltyKind {
+  EARN
+  REVERSAL
+}
+User "1" -- "0..*" Order : places
+User "1" -- "0..*" Payment : requests
+User "1" -- "0..*" LoyaltyTransaction : records
+Order "1" *-- "1..*" OrderItem
+Product "1" -- "0..*" OrderItem
+Promotion "0..1" -- "0..*" Order : applied
+Order "1" -- "0..*" Payment : attempts
+Order "1" -- "0..2" LoyaltyTransaction : EARN / REVERSAL
+Order ..> OrderStatus
+Order ..> InventoryStatus
+Payment ..> PaymentMethod
+Payment ..> PaymentStatus
+LoyaltyTransaction ..> LoyaltyKind
+note bottom of Order
+  Giá/tùy chọn/mã giảm lưu snapshot, không định giá lại khi retry.
+  Chi tiết size/topping và bảng liên kết: brewlite-uml.md.
+  Hủy PAID trước pha chế: hoàn mock, trả kho, ghi REVERSAL;
+  giữ EARN gốc, mỗi kind tối đa một lần/đơn.
+end note
+@enduml

@@ -5,6 +5,8 @@
 
 Unit kiểm quy tắc thuần; integration dùng PostgreSQL test riêng để chứng minh transaction/unique/version; browser E2E kiểm luồng UI nối API thật với Mock Payment nội bộ. Không dùng test cấu trúc Markdown thay kiểm thử sản phẩm.
 
+[Smoke Week 1 do Đức Phúc cung cấp](../qa/week-1-smoke-checklist.md) là báo cáo ngày 10/10/2026 tại commit fff2606. Kết quả đó không thay trạng thái các TC nghiệm thu bên dưới; chưa chạy lại khi hợp nhất tài liệu ngày 15/10.
+
 ### TC-01
 
 **Menu — API/UI:** Seed sản phẩm có tên/ảnh/giá, gọi `GET /products` và mở menu. Đối chiếu dữ liệu; kiểm tra seed trống, API chậm/lỗi và sản phẩm hết hàng. UI có loading/empty/error và giá rõ, không yêu cầu login để xem.
@@ -24,6 +26,8 @@ Unit kiểm quy tắc thuần; integration dùng PostgreSQL test riêng để ch
 ### TC-05
 
 **Tạo đơn/giá — integration:** Giá do DB quyết định, đơn mới `PENDING`, snapshot tùy chọn và tổng đúng. `expectedSubtotal` lệch bị từ chối trước giữ kho; giá giả/userId giả không được tin. Thay catalog sau tạo đơn không sửa lịch sử/số tiền payment. Tiêm lỗi trước commit chứng minh cả đơn và kho rollback.
+
+Đối chiếu AC-FR-07-5: DTO đặt đơn dùng class-validator; quantity sai kiểu/không dương, thiếu trường hoặc tùy chọn không hợp lệ phải bị chặn, không để lại đơn hay thay đổi kho.
 
 ### TC-06
 

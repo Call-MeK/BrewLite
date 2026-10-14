@@ -1,6 +1,6 @@
 # Tài liệu chuẩn BrewLite — giữa kỳ và cuối kỳ
 
-**Cập nhật:** 14/10/2026. Người dùng đã đồng ý tiếp tục một repo, giữ đầy đủ yêu cầu cả hai bài. Bộ tài liệu dưới đây là nguồn yêu cầu hiện hành để nhóm review và triển khai; chưa xác nhận chức năng hoặc các task chấm điểm đã hoàn thành.
+**Cập nhật:** 15/10/2026. Người dùng đã đồng ý tiếp tục một repo, giữ đầy đủ yêu cầu cả hai bài. Bộ tài liệu dưới đây là nguồn yêu cầu hiện hành để nhóm review và triển khai; chưa xác nhận chức năng hoặc các task chấm điểm đã hoàn thành.
 
 ## Bắt đầu ở đây
 
@@ -10,11 +10,20 @@ Thành viên mới đọc **Tổng quan → Phân công**, rồi đọc yêu c�
 | --- | --- | --- |
 | 1. Tổng quan | [Project chung](project-overview.md) | Nắm mục tiêu, phạm vi hai bài, kiến trúc đề xuất, rubric và lộ trình. |
 | 2. Phân công | [Ai làm gì và phối hợp với ai](team-assignments.md) | Biết phần phụ trách, đầu ra, người phối hợp và cách xác nhận hoàn thành. |
-| 3. Yêu cầu | [Bối cảnh/phạm vi](requirements/context-and-scope.md), [SRS](requirements/srs.md), [Checkout](requirements/use-case-checkout.md) | Hiểu chức năng, tiêu chí đạt, luồng chính và các ca lỗi. |
+| 3. Yêu cầu | [Đọc nhanh](requirements/week-1-requirements.md), [Bối cảnh/phạm vi](requirements/context-and-scope.md), [SRS](requirements/srs.md), [Checkout](requirements/use-case-checkout.md) | Bắt đầu bằng bản tóm tắt; dùng SRS/UC để nghiệm thu. |
 | 4. Sơ đồ | [UML](diagrams/README.md) | Xem nguồn sơ đồ, trạng thái render và cách xuất hình. |
-| 5. Kiểm thử | [Test cases](requirements/test-cases.md), [Truy vết](traceability-matrix.md) | Biết cần kiểm tra gì và nối yêu cầu với thiết kế/code/test. |
+| 5. Kiểm thử | [Test cases](requirements/test-cases.md), [Smoke Week 1](qa/week-1-smoke-checklist.md), [Truy vết](traceability-matrix.md) | Phân biệt kế hoạch test, kết quả lịch sử và liên kết tới yêu cầu. |
 
 Frontend/backend làm auth đọc thêm [hợp đồng API auth](auth-contract.md) và đối chiếu SRS trước khi triển khai.
+
+Thiết kế kỹ thuật: [kiến trúc và ADR](architecture/README.md). Chuẩn bị chạy/deploy/bàn giao: [deployment.md](deployment.md). Các file này mô tả phương án và điều kiện cần hoàn tất, không khẳng định đã triển khai.
+
+## Tài liệu nhóm đã hợp nhất ngày 15/10/2026
+
+- Bản yêu cầu của Đức Phúc được chuyển thành [bản đọc nhanh](requirements/week-1-requirements.md), dùng mã SRS hiện hành; có bảng ánh xạ mã cũ.
+- ERD/module được giữ và chỉnh tại [thiết kế bổ trợ](diagrams/brewlite-uml.md). Hai sequence gốc được hợp nhất thành nguồn sequence chung; bổ sung activity, class nghiệp vụ và deployment dự kiến. Tất cả còn chờ render/review; deployment chưa xác nhận hosting thực tế.
+- [Smoke report](qa/week-1-smoke-checklist.md) giữ kết quả ngày 10/10/2026 tại commit fff2606, không phải kết quả chạy lại hoặc nghiệm thu phiên bản hiện tại.
+- Ba thư mục ngoài `requirements/`, `uml/`, `qa/` đã được chuyển vào `docs`; không duy trì bộ yêu cầu song song. Nội dung mới giữ ghi nhận tác giả bản gốc, không đồng nghĩa tác giả đã duyệt các chỉnh sửa hợp nhất.
 
 ## Căn cứ và thứ tự ưu tiên
 
@@ -36,6 +45,10 @@ Ghi chú cá nhân mới đặt trong `docs/private/` (đã ignore). Chỉ đưa
 | `docs/README.md` | Mục lục và quy tắc dùng tài liệu hiện hành. |
 | `docs/requirements/*.md` | Phạm vi, SRS, checkout và ca kiểm thử. |
 | `docs/diagrams/README.md` | Nguồn UML, trạng thái và hướng dẫn render. |
+| `docs/diagrams/brewlite-uml.md` | ERD/module đề xuất kế thừa từ tài liệu nhóm; không thay class nghiệp vụ. |
+| `docs/architecture/README.md`, `docs/architecture/adr/*.md` | Kiến trúc, quyết định/đánh đổi và phần chưa chốt. |
+| `docs/deployment.md` | Chuẩn bị môi trường, CI/CD, migration, rollback và bàn giao; chưa có lệnh deploy đã kiểm chứng. |
+| `docs/qa/*.md` | Báo cáo kết quả chạy test theo ngày/commit, tách khỏi kế hoạch test. |
 | `docs/traceability-matrix.md` | Đối chiếu yêu cầu với thiết kế, code và test. |
 | `docs/project-overview.md` | Thiết kế chung, rubric A1/A2 và lộ trình. |
 | `docs/team-assignments.md` | Phân công nhóm, phối hợp và tiêu chí bàn giao. |
@@ -50,5 +63,19 @@ Repo riêng `brewlite-assignment2` là nguồn nháp trước khi hợp nhất, 
 - Bộ này tạo nền Task 1 A2 và truy vết dự kiến. Review nhóm, commit/PR, hình UML xuất từ nguồn và việc nghiệm thu phải có bằng chứng thật; trạng thái render cụ thể nằm trong mục UML.
 - Activity/sequence/class, kiến trúc/ADR/deployment, chức năng sản phẩm, test tự động nghiệp vụ, CI/CD và production vẫn cần hoàn tất theo thứ tự **Task 1 → 2 → 3 → 4 → 5**.
 - Giữa kỳ vẫn phải đủ 10 task A1, đặc biệt cả bốn nghiệp vụ Task 10. Cuối kỳ cần hai Sprint triển khai và production hoạt động khi chấm, không chỉ bản demo local.
+
+## Đối chiếu lại đề gốc ngày 15/10/2026
+
+Đã đọc cả hai PDF gốc: phạm vi hiện hành giữ đủ 10 task A1 và 5 task A2. Số bảng 10/12, hạn đơn 15 phút và JWT một giờ không phải yêu cầu bắt buộc của đề. SRS 2.1 làm rõ class-validator cho API đặt đơn; auth-contract ghi 3600 là ví dụ, không tự chốt token.
+
+| Cổng A2 | Tạo phẩm đã soạn | Còn thiếu trước nghiệm thu |
+| --- | --- | --- |
+| Task 1 — Yêu cầu | Context, SRS/MoSCoW/AC, use case và nguồn diagram. | Hình kết xuất, review nhóm, commit/PR và minh chứng thực tế. |
+| Task 2 — Mô hình | Nguồn activity/sequence/class và FSM. | Kiểm tra cú pháp, render/kiểm tra hình, review tính nhất quán. |
+| Task 3 — Kiến trúc | Kiến trúc phân lớp, ba ADR và deployment dự kiến. | Chốt token/hosting, hoàn thiện ADR và sơ đồ theo môi trường thật, render/review/truy vết tới code. |
+| Task 4 — Sprint 1 | Có scaffold và kế hoạch. | apps/web + apps/api, menu/API/seed/test, board/Scrum, CI chặn merge và minh chứng xanh/đỏ. |
+| Task 5 — Sprint 2/Delivery | Có đặc tả, ca kiểm thử và hướng dẫn chuẩn bị bàn giao. | Chức năng, test nghiệp vụ/E2E, Compose/migration, CD, production HTTPS, health/rollback/release và demo thật. |
+
+Không đánh dấu đạt các cổng từ việc tạo tài liệu. Giữ thứ tự Task 1 → 2 → 3 → 4 → 5 khi nghiệm thu; smoke report 10/10 chỉ phản ánh commit lịch sử.
 
 Thay đổi lần này chuẩn hóa tài liệu, bỏ quy tắc Git ignore toàn bộ `docs`, và đưa bản sao hai PDF nguồn vào repo. Bỏ ignore cho phép Git thấy file; không đồng nghĩa file đã được commit hoặc push.

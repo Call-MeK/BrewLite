@@ -1,6 +1,6 @@
 # BrewLite — Đặc tả yêu cầu phần mềm chung (SRS)
 
-**Phiên bản:** 2.0, ngày 13/10/2026.  
+**Phiên bản:** 2.1, ngày 15/10/2026.
 **Phạm vi:** Một sản phẩm cho Assignment 1 (A1, giữa kỳ) và Assignment 2 (A2, cuối kỳ).  
 **Trạng thái:** Baseline yêu cầu đã hòa giải; **chưa nghiệm thu bất kỳ tiêu chí sản phẩm nào**. Tài liệu mô tả hành vi phải xây dựng, không khẳng định chức năng, test, CI/CD hay production đã hoạt động.  
 **Kế hoạch nhóm:** 6 thành viên; mục tiêu hoàn thành trong 14 ngày, dự phòng tối đa khoảng 6 tuần. Đây là kế hoạch người dùng xác nhận, không phải hạn nộp trong PDF.
@@ -88,7 +88,7 @@ Nhân viên quầy, quản lý/PO, giảng viên và nhóm phát triển vẫn l
 - **AC-FR-05-1:** Đăng ký dữ liệu hợp lệ tạo user; CSDL lưu mật khẩu băm bcrypt, không lưu mật khẩu nguyên văn; response không chứa `passwordHash`. [A1 trang 5, 7; response: Nhóm]
 - **AC-FR-05-2:** Đăng nhập đúng cấp JWT; đăng nhập sai bị từ chối với 401 và không cấp JWT. [A1 trang 7; mã HTTP: Nhóm]
 - **AC-FR-05-3:** Đăng ký email đã tồn tại bị từ chối với 409, không tạo user thứ hai. Dữ liệu sai định dạng bị từ chối với 400. [Nhóm; validate theo A1 trang 5]
-- **AC-FR-05-4:** JWT sai chữ ký, sai định dạng hoặc hết hạn không truy cập được route bảo vệ. Thời hạn token và cách lưu token ở client là quyết định triển khai phải ghi ADR; SRS này chưa chốt giá trị/cơ chế mới. [A1 trang 7; chi tiết và ADR: Nhóm]
+- **AC-FR-05-4:** JWT sai chữ ký, sai định dạng hoặc hết hạn không truy cập được route bảo vệ. Thời hạn token và cách lưu token ở client còn chờ chốt trong [ADR-003](../architecture/adr/003-auth-token.md); ví dụ response không thay quyết định này. [A1 trang 7; chi tiết và ADR: Nhóm]
 
 ### FR-06 — Đăng nhập trước checkout
 
@@ -101,6 +101,7 @@ Nhân viên quầy, quản lý/PO, giảng viên và nhóm phát triển vẫn l
 - **AC-FR-07-2:** Backend tính đơn giá, thành tiền, subtotal, giảm giá và total từ dữ liệu hợp lệ của server; giá/tổng tiền do client gửi không thay được số tiền có hiệu lực. [Nhóm]
 - **AC-FR-07-3:** Sau khi tạo đơn, thay đổi tên/giá menu hoặc cấu hình khuyến mãi không sửa snapshot của đơn đã tạo; đọc lại đơn trả đúng tùy chọn, số lượng, đơn giá và giảm giá đã chốt. [Nhóm]
 - **AC-FR-07-4:** Bất kỳ bước ghi Order, OrderItem hoặc giữ kho lỗi đều rollback toàn bộ transaction; không tồn tại đơn thiếu chi tiết hoặc kho bị trừ cho đơn không tạo được. [A1 trang 7; phạm vi atomicity: Nhóm]
+- **AC-FR-07-5:** `POST /orders` validate DTO bằng class-validator theo A1 Task 6; dữ liệu sai bị từ chối trước khi ghi đơn/giữ kho. Test dữ liệu sai và rollback không được thay bằng kiểm tra UI đơn thuần. [A1 trang 7]
 
 ### FR-08 — Kho, transaction và optimistic locking
 
@@ -312,8 +313,9 @@ Không dùng prefix `/api/v1` trong hợp đồng chung. Hợp đồng dưới �
 
 - Use-case tổng quát: [nguồn use-cases.puml](../diagrams/use-cases.puml).
 - Use-case checkout: [đặc tả UC-01](use-case-checkout.md) và [nguồn use-case-checkout.puml](../diagrams/use-case-checkout.puml).
+- Kiến trúc phân lớp và quyết định: [kiến trúc/ADR](../architecture/README.md); [hướng dẫn chuẩn bị bàn giao](../deployment.md). Tài liệu này còn chờ review; token/hosting chưa được chốt, không coi là Task 3 đã nghiệm thu.
 
-Các sơ đồ trên hiện mới có nguồn; chưa có SVG kết xuất. Xem [trạng thái và hướng dẫn render](../diagrams/README.md); phải render và kiểm tra hình trước nghiệm thu. Sơ đồ activity, sequence, class và deployment ở các task sau phải dùng đúng hợp đồng này. Mã test được quản lý trong ma trận truy vết; test còn kế hoạch không được tính là bằng chứng đã đạt.
+Các sơ đồ trên hiện mới có nguồn; chưa có SVG kết xuất. Xem [trạng thái và hướng dẫn render](../diagrams/README.md); phải render và kiểm tra hình trước nghiệm thu. Bản nháp [activity](../diagrams/activity-checkout.puml), [sequence](../diagrams/sequence-checkout.puml), [class](../diagrams/domain-classes.puml) và [deployment](../diagrams/deployment.puml) được bổ sung ngày 15/10, kế thừa [ERD/module](../diagrams/brewlite-uml.md) từ tài liệu nhóm. Chưa render/review hoặc xác nhận hosting; phải giữ đúng hợp đồng SRS khi hoàn thiện. Mã test được quản lý trong ma trận truy vết; test còn kế hoạch không được tính là bằng chứng đã đạt.
 
 Nhóm nghiệm thu theo từng AC, ghi người kiểm tra, ngày, commit, môi trường và bằng chứng thực tế. TV6 phụ trách đối chiếu yêu cầu/test; owner chức năng và người review xác nhận phần mình; người đại diện PO ưu tiên và nghiệm thu nội bộ. Không dùng việc tạo tài liệu để thay code/test/production hoặc tự đánh dấu hoàn tất cổng A2. Lịch sử Git/review vẫn phải được tạo thật khi tích hợp tài liệu.
 

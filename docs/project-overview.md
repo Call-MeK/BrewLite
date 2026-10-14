@@ -285,3 +285,7 @@ Hai báo cáo dẫn đến cùng mã nguồn và tài liệu chuẩn, nhưng ch�
 **Cập nhật sau khi người dùng đồng ý hợp nhất:** Đã tạo bộ context/SRS/use-case/test cases/traceability trong repo chính, thêm nguồn UML, đánh dấu spec cũ là lịch sử và bỏ Git ignore toàn bộ `docs`. Hai PDF nguồn đã được sao chép nguyên vẹn vào `docs/references`. Trạng thái render UML ghi trong [mục lục sơ đồ](diagrams/README.md); không coi nguồn UML là bằng chứng đã có hình kết xuất.
 
 **Giới hạn hiện tại:** Chưa chuyển thư mục code, viết chức năng, chạy test ứng dụng, commit/push, tạo PR hoặc deploy. Tài liệu mới cần review nhóm và Git history thực để nghiệm thu. Chưa xác minh điều kiện/giá hosting; nền tảng production phải được kiểm tra ở Task 3. Các mục đề xuất kỹ thuật ngoài PDF vẫn là quyết định nhóm, không phải yêu cầu bổ sung do giảng viên đưa ra.
+
+## 11. Rà soát tài liệu ngày 15/10/2026
+
+Đã bổ sung [kiến trúc phân lớp và ADR](architecture/README.md), [chuẩn bị triển khai/bàn giao](deployment.md) và nguồn UML còn thiếu. [SRS 2.1](requirements/srs.md) làm rõ class-validator cho tạo đơn; [auth contract](auth-contract.md) giữ TTL/cách lưu token là quyết định mở, 3600 chỉ là ví dụ. Hosting, hình render, review/Git history, code, test và production vẫn cần hoàn tất. Xem [bảng trạng thái từng cổng](README.md) trước khi báo cáo tiến độ.

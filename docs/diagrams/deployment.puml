@@ -1,0 +1,41 @@
+@startuml
+title BrewLite — Deployment dự kiến (chưa chọn hosting / chưa triển khai)
+node "Máy lập trình / local" {
+  node "Docker Compose dự kiến" {
+    artifact "Next.js web :3000" as LocalWeb
+    artifact "NestJS API :3001" as LocalAPI
+    database "PostgreSQL :5432\npersistent volume" as LocalDB
+  }
+}
+cloud "CI/CD" {
+  artifact "PR: install / lint / unit / build" as CI
+  artifact "CD: quality gate / image tag SHA\ndeploy / migrate / smoke / rollback" as CD
+  artifact "Registry nếu nền tảng yêu cầu" as Registry
+}
+node "Production dự kiến — provider chờ ADR" {
+  node "Public HTTPS ingress" as Ingress
+  artifact "Next.js web/PWA\nCDN nếu nền tảng hỗ trợ" as Web
+  artifact "NestJS API + Mock Payment nội bộ\nconfig / logs / health" as API
+  database "PostgreSQL\nprivate network / persistent storage" as DB
+  artifact "Runtime secrets / CI secrets\nkhông đưa vào repo hoặc NEXT_PUBLIC_*" as Secrets
+}
+actor "Trình duyệt" as Browser
+Browser --> Ingress : HTTPS 443
+Ingress --> Web : route web / cổng nội bộ
+Ingress --> API : route API / cổng nội bộ
+API --> DB : PostgreSQL 5432 nội bộ
+Secrets ..> API : DB URL / JWT
+Secrets ..> CD : deploy credentials
+CI --> CD : chỉ tiếp tục khi đạt checks
+CD --> Registry : image tag SHA nếu cần
+CD --> Ingress : deploy web/API, kiểm HTTPS/health
+CD --> DB : migration qua kết nối riêng có kiểm soát
+LocalWeb --> LocalAPI : API URL cấu hình
+LocalAPI --> LocalDB : 5432 nội bộ Compose
+note bottom of DB
+  DB không public trực tiếp ra Internet.
+  Kiến trúc cụ thể, cổng, provider, quyền truy cập,
+  TLS, backup và cách rollback phải được chốt bằng ADR,
+  rồi cập nhật hình theo môi trường thực tế.
+end note
+@enduml

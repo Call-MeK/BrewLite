@@ -1,0 +1,93 @@
+@startuml
+title BrewLite — Sequence checkout (bản nháp hòa giải 15/10/2026)
+actor Customer as C
+participant "Next.js UI" as UI
+participant "NestJS API" as API
+database PostgreSQL as DB
+participant "Mock Payment\n(nội bộ, xác định)" as Mock
+
+C -> UI : Chọn món / size / topping / số lượng
+opt Chưa đăng nhập
+  UI -> API : POST /auth/login hoặc /auth/register rồi login
+  API --> UI : JWT hoặc lỗi; giữ giỏ
+end
+UI -> API : POST /orders + JWT + key + payload
+API -> API : Validate JWT/DTO; lấy user từ JWT
+alt JWT hoặc dữ liệu sai
+  API --> UI : 401 / 400; không ghi dữ liệu
+else Hợp lệ
+  API -> DB : Tìm (user, key tạo đơn)
+  alt Có key
+    API --> UI : Cùng payload: kết quả cũ; khác: 409
+  else Key mới
+    API -> DB : Đọc giá, tùy chọn, mã giảm; so expectedSubtotal
+    alt Giá đổi / tùy chọn hoặc mã sai
+      API --> UI : Lỗi; không giữ kho
+    else Giá và cấu hình hợp lệ
+      API -> DB : BEGIN; CAS stock/version; tạo PENDING + snapshot + key
+      alt Thiếu kho / xung đột / ghi lỗi
+        API -> DB : ROLLBACK toàn bộ
+        API --> UI : Lỗi an toàn; giữ giỏ
+      else Thành công
+        API -> DB : COMMIT
+        API --> UI : orderId, total, PENDING
+      end
+    end
+  end
+end
+
+note over API, DB
+  Unique (user, key) xử lý cả hai request tạo đơn đồng thời.
+  Thua unique: rollback, đọc kết quả đã commit, so payload.
+  Không chuyển sang payment khi tạo đơn chưa thành công.
+end note
+
+opt Đã có orderId hợp lệ, khách chọn WALLET/CARD
+  UI -> API : POST /payments + JWT + key + orderId/method
+  API -> API : Validate JWT/DTO
+  API -> DB : BEGIN; khóa Order, kiểm tra owner/state; tìm (user, payment key)
+  alt Không hợp lệ / không thuộc khách
+    API -> DB : ROLLBACK
+    API --> UI : 401 / 400 / 404
+  else Đã có key
+    API -> DB : Kết thúc transaction không ghi thêm
+    API --> UI : Cùng payload: kết quả cũ; khác: 409
+  else Attempt mới
+    opt PAYMENT_FAILED: retry nghiệp vụ, key mới trên cùng đơn
+      API -> DB : Kiểm tra và CAS stock/version, giữ lại toàn bộ kho
+      API -> DB : Đủ kho: PAYMENT_FAILED -> PENDING, RESERVED
+    end
+    alt Thiếu kho / trạng thái không cho thanh toán
+      API -> DB : ROLLBACK; giữ PAYMENT_FAILED nếu retry thiếu kho
+      API --> UI : 409; không gọi mock
+    else PENDING + RESERVED, không có payment thành công
+      API -> Mock : charge(orderId, Order.total, method)
+      Mock --> API : Kết quả server kiểm soát, xác định
+      alt Thành công
+        API -> DB : Payment SUCCEEDED, Order PAID/COMMITTED; EARN một lần
+      else Thất bại
+        API -> DB : Payment FAILED, PAYMENT_FAILED/RELEASED; trả kho một lần
+      end
+      API -> DB : COMMIT kết quả + key
+      API --> UI : Kết quả đã lưu
+      UI --> C : PAID: xác nhận rồi xóa giỏ; lỗi: giữ giỏ / cho retry
+    end
+  end
+end
+
+note over API, Mock
+  Mock là hàm nội bộ nhanh, không gọi mạng hoặc chờ người dùng.
+  Lỗi bất kỳ trước commit rollback toàn bộ; không trả thành công giả.
+  Nếu thay bằng gateway thật phải thiết kế lại transaction/side effect.
+  Order lock/version và unique chặn hai key gây hai thành công.
+end note
+note over UI, API
+  Timeout: replay cùng key/payload/orderId để lấy kết quả đã lưu.
+  Chỉ tạo payment key mới sau thất bại nghiệp vụ đã xác định.
+end note
+opt Đã PAID và xem lịch sử
+  UI -> API : GET /orders/me hoặc /orders/:id + JWT
+  API -> DB : Chỉ đọc đơn của user; snapshot không đổi
+  API --> UI : Mã / trạng thái / chi tiết hoặc 401/404
+end
+@enduml
