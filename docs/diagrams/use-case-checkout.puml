@@ -1,0 +1,62 @@
+@startuml
+title BrewLite — UC-01: Đặt và thanh toán đơn hàng
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+
+actor "Khách hàng\n(Customer)" as Customer
+
+rectangle "BrewLite — Checkout" {
+  usecase "UC-01: Đặt và thanh toán đơn" as Checkout
+  usecase "Kiểm tra JWT / quyền sở hữu\nFR-05, FR-06, FR-12" as ValidateAuth
+  usecase "Kiểm tra lựa chọn, giá và tồn kho\nFR-02, FR-03, FR-08, FR-14" as ValidateOrder
+  usecase "Tạo đơn PENDING và snapshot giá\nFR-07, FR-11" as CreateOrder
+  usecase "Giữ kho trong transaction\nvới optimistic locking\nFR-08" as ReserveStock
+  usecase "Thanh toán Ví / Thẻ mô phỏng\nFR-10, FR-11" as Pay
+  usecase "Kiểm tra và áp dụng mã giảm giá\nFR-16" as Promotion
+  usecase "Cộng điểm đúng một lần\nFR-17" as Loyalty
+  usecase "Thử thanh toán lại cùng đơn\nFR-10, FR-11, FR-13, FR-15" as Retry
+}
+
+Customer -- Checkout
+Customer -- Retry
+Checkout ..> ValidateAuth : <<include>>
+Checkout ..> ValidateOrder : <<include>>
+Checkout ..> CreateOrder : <<include>>
+CreateOrder ..> ReserveStock : <<include>>
+Checkout ..> Pay : <<include>>
+Promotion ..> CreateOrder : <<extend>>\n[có nhập mã]
+Loyalty ..> Pay : <<extend>>\n[thành công: PAID]
+Retry ..> ValidateAuth : <<include>>
+Retry ..> ReserveStock : <<include>>
+Retry ..> Pay : <<include>>
+
+note left of Checkout
+  Tiền điều kiện: giỏ không rỗng;
+  JWT hợp lệ trước POST /orders.
+  Chưa đăng nhập: đăng ký / đăng nhập,
+  giữ giỏ và quay lại (FR-04, FR-06).
+  Backend lấy user từ JWT, tự tính giá;
+  không tin giá / userId do client khai.
+end note
+
+note right of Pay
+  Mock Payment chạy trong NestJS, không là actor ngoài.
+  Thành công: PAID, cộng floor(thực trả / 10000) điểm;
+  xác nhận thành công rồi mới xóa giỏ.
+  Thất bại: PAYMENT_FAILED, trả kho đúng một lần,
+  giữ giỏ; không biến thất bại thành CANCELLED.
+  Kịch bản mock được kiểm soát ở server.
+end note
+
+note bottom of Retry
+  Tiền điều kiện: PAYMENT_FAILED.
+  Cố ý thử lại: payment key mới, cùng orderId;
+  kiểm tra / giữ lại kho rồi PAYMENT_FAILED → PENDING.
+  Thiếu kho: không đổi trạng thái, không thanh toán.
+  Retry do timeout: dùng lại key + payload + orderId;
+  trả kết quả cũ, không tạo lần xử lý thanh toán mới.
+  Cùng key khác payload: từ chối; thành công / điểm chỉ một lần.
+end note
+@enduml

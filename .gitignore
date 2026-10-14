@@ -40,4 +40,10 @@ coverage/
 *.tsbuildinfo
 
 /.agents
-/docs
+
+# Local notes and superseded drafts (keep current shared docs tracked)
+/docs/private/
+/docs/superpowers/plans/2026-10-09-khoa-week-1.md
+/docs/superpowers/plans/2026-10-09-week-1-task-01-assignments.md
+/docs/superpowers/specs/2026-10-09-brewlite-design.md
+/docs/superpowers/specs/file.md

@@ -2,6 +2,12 @@
 
 Ứng dụng web đặt cà phê và thanh toán không tiền mặt cho môn Công nghệ Phần mềm.
 
+Repo này dùng chung cho báo cáo giữa kỳ (Assignment 1) và cuối kỳ (Assignment 2).
+Xem [bộ tài liệu chuẩn](docs/README.md), [SRS](docs/requirements/srs.md)
+và [bảng đối chiếu hai rubric](docs/superpowers/specs/2026-10-13-brewlite-unified-project-design.md)
+trước khi triển khai. Các tài liệu ngày 09/10 chỉ dùng tham khảo lịch sử khi khác bộ yêu cầu hiện hành.
+Tài liệu yêu cầu không phải xác nhận chức năng đã hoàn thành; cấu trúc chạy hiện tại vẫn là `frontend/` và `backend/`.
+
 ## Công nghệ và phạm vi
 
 - Frontend: Next.js, React, TypeScript, Tailwind CSS.

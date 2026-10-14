@@ -1,0 +1,54 @@
+@startuml
+title BrewLite — Use-case tổng quan (baseline chung A1 + A2)
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+
+actor "Khách hàng\n(Customer)" as Customer
+actor "Nhân viên / người vận hành demo\n(thao tác nội bộ có kiểm soát)" as Staff
+
+rectangle "BrewLite — Next.js + NestJS + PostgreSQL" {
+  usecase "Xem menu và tồn kho\nFR-01, FR-03" as Menu
+  usecase "Xem chi tiết, chọn size / topping\nFR-02" as Detail
+  usecase "Quản lý giỏ hàng\nFR-04, FR-15" as Cart
+  usecase "Đăng ký / đăng nhập\nFR-05, FR-06" as Auth
+  usecase "UC-01: Đặt và thanh toán đơn\nFR-07, FR-08, FR-11, FR-14" as Checkout
+  usecase "Thanh toán Ví / Thẻ mô phỏng\nFR-10, FR-11" as Pay
+  usecase "Áp dụng mã khuyến mãi\nFR-16" as Promotion
+  usecase "Cộng điểm sau thanh toán thành công\nFR-17" as Loyalty
+  usecase "Xem lịch sử / theo dõi đơn của mình\nFR-12, FR-13" as History
+  usecase "Chuyển trạng thái / hủy đơn hợp lệ\nFR-13" as Transition
+}
+
+Customer -- Menu
+Customer -- Detail
+Customer -- Cart
+Customer -- Auth
+Customer -- Checkout
+Customer -- History
+Staff -- Transition
+
+Checkout ..> Pay : <<include>>
+Promotion ..> Checkout : <<extend>>\n[có nhập mã]
+Loyalty ..> Pay : <<extend>>\n[kết quả thành công]
+
+note bottom of Checkout
+  JWT hợp lệ là tiền điều kiện của POST /orders.
+  Chưa đăng nhập: đi qua luồng Auth, giữ nguyên giỏ,
+  rồi quay lại checkout (FR-06); không include-login.
+  Chi tiết: use-case-checkout.puml và UC-01.
+end note
+
+note bottom of Pay
+  Mock Payment là thành phần nội bộ NestJS, không phải actor.
+  Khi thành công, cộng điểm đúng một lần là bắt buộc;
+  thất bại: PAYMENT_FAILED, giữ giỏ và cho thử lại cùng đơn.
+end note
+
+note bottom of Transition
+  Chỉ dùng thao tác demo nội bộ có kiểm soát và test.
+  Không có dashboard nhân viên public trong baseline.
+  Manager là stakeholder, không có tương tác runtime đã yêu cầu.
+end note
+@enduml
