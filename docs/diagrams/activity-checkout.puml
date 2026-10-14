@@ -1,0 +1,84 @@
+@startuml
+title BrewLite — Activity checkout (bản nháp 15/10/2026)
+|Khách / UI|
+start
+:Xem menu, chọn món/size/topping và giỏ;
+if (Giỏ rỗng?) then (có)
+  :Chặn checkout;
+  stop
+endif
+if (Chưa có JWT hợp lệ?) then (có)
+  :Đăng ký / đăng nhập, giữ giỏ;
+  if (Đăng nhập thành công?) then (không)
+    :Hiện lỗi, giữ giỏ;
+    stop
+  endif
+endif
+:Gửi tạo đơn + key + payload;
+|Backend / DB|
+:Kiểm JWT, dữ liệu, key, giá, tùy chọn, mã giảm;
+if (Yêu cầu sai / giá đổi?) then (có)
+  |Khách / UI|
+  :Hiện lỗi và giá mới khi phù hợp, giữ giỏ;
+  stop
+endif
+|Backend / DB|
+:Replay trả kết quả cũ hoặc tạo PENDING
+và giữ kho bằng transaction + stock/version;
+if (Thiếu kho / xung đột?) then (có)
+  :Rollback toàn bộ;
+  |Khách / UI|
+  :Hiện lỗi, giữ giỏ;
+  stop
+endif
+repeat
+  |Khách / UI|
+  :Chọn WALLET/CARD; gửi payment key + orderId;
+  |Backend / DB|
+  :Kiểm JWT/owner/key; khóa đơn;
+  if (Key đã tồn tại?) then (có)
+    if (Payload trùng?) then (có)
+      :Trả kết quả đã lưu, không xử lý lại;
+    else (không)
+      :Trả 409, không thay kết quả;
+    endif
+    |Khách / UI|
+    :Hiển thị kết quả server; PAID mới xóa giỏ;
+    stop
+  endif
+  |Backend / DB|
+  :Attempt mới kiểm tra state;
+  if (Retry sau PAYMENT_FAILED?) then (có)
+    :Giữ lại đủ kho trước thanh toán;
+    if (Thiếu kho?) then (có)
+      :Rollback, giữ PAYMENT_FAILED; không gọi mock;
+      |Khách / UI|
+      :Hiện hết hàng, giữ giỏ;
+      stop
+    endif
+    :Chuyển PENDING/RESERVED;
+  endif
+  :Attempt mới hợp lệ gọi mock nội bộ;
+  if (Kết quả thành công?) then (có)
+    :Lưu Payment SUCCEEDED, PAID/COMMITTED,
+EARN một lần trong transaction;
+    |Khách / UI|
+    :Sau xác nhận server mới xóa giỏ;
+    :Hiện mã đơn, lịch sử và trạng thái;
+    stop
+  else (không)
+    :Lưu FAILED, PAYMENT_FAILED/RELEASED;
+    :Trả lần giữ kho hiện tại đúng một lần;
+    |Khách / UI|
+    :Thông báo lỗi, giữ giỏ;
+  endif
+repeat while (Chủ động thử lại cùng đơn?) is (có, key mới) not (không)
+:Rời màn hình không tự hủy đơn;
+stop
+note right
+  Sơ đồ activity rút gọn luồng chính.
+  Chi tiết JWT/DTO/key/state không hợp lệ,
+  replay dừng xử lý, timeout và rollback:
+  xem sequence-checkout.puml và UC-01.
+end note
+@enduml

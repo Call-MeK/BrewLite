@@ -77,3 +77,14 @@
 ## 5. Điều kiện retest
 
 Retest SMK-10..15 khi đã có Products API, dữ liệu seed tối thiểu gồm một sản phẩm còn hàng và một sản phẩm `stock=0`, cùng Menu có đủ loading/empty/error/out-of-stock states. Ghi commit, ngày chạy, output thực tế và chuyển trạng thái dựa trên bằng chứng; không đổi trực tiếp từ BLOCKED thành PASS nếu chưa chạy.
+
+## 6. Đối chiếu với bộ yêu cầu hiện hành
+
+| Ca lịch sử | FR/NFR hiện hành | Ca nghiệm thu liên quan |
+| --- | --- | --- |
+| SMK-01..06 | NFR-05, NFR-08 | TC-12; các test scaffold không chứng minh nghiệp vụ đã đạt |
+| SMK-07..09 | NFR-05 | TC-12; `GET /` trả Hello World không thay health check có kiểm tra DB |
+| SMK-10..11, SMK-13..15 | FR-01 | TC-01 |
+| SMK-12 | FR-03 | TC-01, TC-06; smoke hết hàng không thay test cạnh tranh kho |
+
+Lần retest mới ghi báo cáo riêng kèm ngày, commit và bằng chứng; không ghi đè bảng lịch sử này. Báo cáo mới dùng các mã trong [SRS](../requirements/srs.md) và [ma trận truy vết](../traceability-matrix.md).
