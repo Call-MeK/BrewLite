@@ -15,6 +15,7 @@ Thành viên mới đọc **Tổng quan → Phân công**, rồi đọc yêu c�
 | 5. Kiểm thử | [Test cases](requirements/test-cases.md), [Smoke Week 1](qa/week-1-smoke-checklist.md), [Truy vết](traceability-matrix.md) | Phân biệt kế hoạch test, kết quả lịch sử và liên kết tới yêu cầu. |
 
 Frontend/backend làm auth đọc thêm [hợp đồng API auth](auth-contract.md) và đối chiếu SRS trước khi triển khai.
+Quy ước chung về tên endpoint, tên hàm và trường dữ liệu nằm trong [API.md](../API.md).
 
 Thiết kế kỹ thuật: [kiến trúc và ADR](architecture/README.md). Chuẩn bị chạy/deploy/bàn giao: [deployment.md](deployment.md). Các file này mô tả phương án và điều kiện cần hoàn tất, không khẳng định đã triển khai.
 
