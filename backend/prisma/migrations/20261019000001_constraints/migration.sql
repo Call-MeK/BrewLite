@@ -1,0 +1,12 @@
+ALTER TABLE "User" ADD CONSTRAINT "User_points_nonnegative" CHECK ("loyaltyPoints" >= 0);
+ALTER TABLE "Product" ADD CONSTRAINT "Product_stock_price_valid" CHECK ("stock" >= 0 AND "basePrice" > 0 AND "version" >= 0);
+ALTER TABLE "SizeOption" ADD CONSTRAINT "SizeOption_valid" CHECK ("code" IN ('S', 'M', 'L') AND "priceDelta" >= 0);
+ALTER TABLE "Topping" ADD CONSTRAINT "Topping_price_valid" CHECK ("price" >= 0);
+ALTER TABLE "Promotion" ADD CONSTRAINT "Promotion_valid" CHECK ("amount" >= 0 AND "minOrderValue" >= 0 AND "expiresAt" > "validFrom");
+ALTER TABLE "Order" ADD CONSTRAINT "Order_totals_valid" CHECK ("subtotal" > 0 AND "discount" >= 0 AND "total" = "subtotal" - "discount" AND "total" > 0);
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_price_quantity_valid" CHECK ("quantity" > 0 AND "unitPrice" > 0 AND "lineTotal" = "unitPrice"::bigint * "quantity" AND "sizePriceSnapshot" >= 0);
+ALTER TABLE "OrderItemTopping" ADD CONSTRAINT "OrderItemTopping_price_valid" CHECK ("priceSnapshot" >= 0);
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_amount_valid" CHECK ("amount" > 0);
+ALTER TABLE "LoyaltyTransaction" ADD CONSTRAINT "LoyaltyTransaction_sign_valid" CHECK (("kind" = 'EARN' AND "points" >= 0) OR ("kind" = 'REVERSAL' AND "points" <= 0));
+CREATE UNIQUE INDEX "Payment_one_success_per_order" ON "Payment" ("orderId") WHERE "status" = 'SUCCEEDED';
+CREATE UNIQUE INDEX "Payment_one_processing_per_order" ON "Payment" ("orderId") WHERE "status" = 'PROCESSING';

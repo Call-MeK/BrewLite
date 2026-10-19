@@ -1,9 +1,22 @@
 # BrewLite — Ma trận truy vết yêu cầu chung
 
 **Ngày:** 13/10/2026. Nguồn chuẩn: [SRS](requirements/srs.md), [UC-01](requirements/use-case-checkout.md), [test cases](requirements/test-cases.md).  
-**Trạng thái:** Yêu cầu và ca kiểm thử đã được đặc tả; code/API nghiệp vụ và các test sản phẩm bên dưới **chưa triển khai/chưa chạy**. Các tên module/API là đích cần làm, không phải link đến code đang tồn tại. Không dùng ma trận này để khẳng định đã nghiệm thu.
+**Cập nhật tích hợp API 19/10/2026:** Các API đã có code và test PostgreSQL; xem bảng bằng chứng bên dưới. Bảng use-case giữ phạm vi yêu cầu đầy đủ, gồm cả UI chưa hoàn thiện. Không coi kiểm thử API là nghiệm thu toàn bộ SRS hoặc browser checkout.
 
-UML đã có nguồn: [tổng quan](diagrams/use-cases.puml), [checkout](diagrams/use-case-checkout.puml), [FSM](diagrams/order-states.puml). Đã bổ sung bản nháp [activity](diagrams/activity-checkout.puml), [sequence](diagrams/sequence-checkout.puml), [class](diagrams/domain-classes.puml), [ERD/module](diagrams/brewlite-uml.md) và [deployment dự kiến](diagrams/deployment.puml) ngày 15/10. Chưa render/review; đã có [kiến trúc/ADR nháp](architecture/README.md), nhưng token/hosting và nghiệm thu Task 2–3 chưa hoàn tất. Trạng thái render ghi ở [diagrams/README.md](diagrams/README.md).
+UML đã có nguồn: [tổng quan](diagrams/use-cases.puml), [checkout](diagrams/use-case-checkout.puml), [FSM](diagrams/order-states.puml). Đã bổ sung bản nháp [activity](diagrams/activity-checkout.puml), [sequence](diagrams/sequence-checkout.puml), [class](diagrams/domain-classes.puml), [ERD/module](diagrams/brewlite-uml.md) và [deployment dự kiến](diagrams/deployment.puml) ngày 15/10. Chưa render/review nhóm; token đã chọn tại [ADR-003](architecture/adr/003-auth-token.md), hosting và nghiệm thu Task 2–3 còn mở. Trạng thái render ghi ở [diagrams/README.md](diagrams/README.md).
+
+## Bằng chứng tích hợp API 19/10/2026
+
+| Yêu cầu | Code thực tế | Kiểm thử / giới hạn |
+| --- | --- | --- |
+| FR-01/02/03 | [ProductsService](../backend/src/products/products.service.ts), [Menu](../frontend/src/app/menu/page.tsx), [Detail](../frontend/src/app/product/[id]/page.tsx) | [Public API PostgreSQL](../backend/test/public-api.e2e-spec.ts), [frontend tests](../frontend/tests); chưa browser E2E. |
+| FR-05/06 | [Auth](../backend/src/auth/auth.service.ts), [guard](../backend/src/auth/auth.guard.ts), [forms](../frontend/src/components/auth/LoginForm.tsx) | [Auth unit/HTTP](../backend/src/auth/auth.controller.spec.ts), [public API](../backend/test/public-api.e2e-spec.ts); quay lại checkout còn chờ trang checkout. |
+| FR-07/08/11/14 | [Orders](../backend/src/orders/orders.service.ts), [inventory](../backend/src/orders/inventory.ts), [schema](../backend/prisma/schema.prisma) | [Commerce PostgreSQL](../backend/test/commerce.e2e-spec.ts): snapshot, validation, rollback, tranh kho, concurrent/replay keys; [parser errors](../backend/src/common/configure-app.spec.ts). |
+| FR-10/12/15 | [Payments](../backend/src/payments/payments.service.ts), [OrdersController](../backend/src/orders/orders.controller.ts), [frontend API](../frontend/src/lib/api.ts) | [Commerce PostgreSQL](../backend/test/commerce.e2e-spec.ts): WALLET/CARD, lỗi/retry cùng đơn, ownership/history; checkout/history/cart UI còn thiếu. |
+| FR-13/16/17 | [FSM](../backend/src/orders/order-state.ts), [Orders](../backend/src/orders/orders.service.ts), [Payments](../backend/src/payments/payments.service.ts) | [Tất cả cạnh FSM](../backend/src/orders/order-state.spec.ts), [promotion/loyalty/hủy](../backend/test/commerce.e2e-spec.ts); không có endpoint staff công khai. |
+| NFR-01/02/04/05/08 | [Validation/error/CORS](../backend/src/common/configure-app.ts), [migrations](../backend/prisma/migrations), [health](../backend/src/health/health.controller.ts), [runner DB tạm](../backend/test/run-e2e.mjs) | Có unit/HTTP integration trên PostgreSQL thật. Docker/production, browser E2E, đo latency và nghiệm thu toàn bộ NFR vẫn cần làm. |
+
+Lệnh chạy và cấu hình tại [README](../README.md). Không có commit/PR mới hoặc xác nhận nghiệm thu nhóm được tạo tự động từ bảng này.
 
 ## Chức năng
 

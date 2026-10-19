@@ -1,9 +1,9 @@
 # Auth Contract (AC-01) — BrewLite
 
-**Cập nhật:** 15/10/2026. Hợp đồng đề xuất, chưa phải API đã triển khai.
-Nguồn yêu cầu: [SRS — FR-05/06](requirements/srs.md). Quyết định token được theo dõi trong [ADR auth](architecture/adr/003-auth-token.md), còn chờ chốt thời hạn và cách lưu ở client.
+**Cập nhật:** 19/10/2026. Các endpoint đã triển khai trong `backend/src/auth/`.
+Nguồn yêu cầu: [SRS — FR-05/06](requirements/srs.md). Quyết định token/cách lưu tại [ADR auth](architecture/adr/003-auth-token.md).
 
-Các response bên dưới là ví dụ. `expiresIn: 3600` minh họa số giây hiệu lực, không ấn định TTL một giờ; giá trị thật phải khớp cấu hình backend và `exp` của JWT sau khi ADR được chốt. Không mặc nhiên chọn sessionStorage/localStorage từ tài liệu cũ.
+Backend dùng `JWT_EXPIRES_IN` (số giây nguyên dương, mặc định 3600); `expiresIn` luôn bằng `exp - iat`. Frontend giữ JWT trong React context và xóa khi hết hạn; reload/đóng tab cần login lại. Không dùng sessionStorage/localStorage hoặc cart để lưu token.
 
 ## Quy ước chung
 - Tên endpoint, hàm và trường JSON theo [API.md](../API.md).
@@ -13,7 +13,7 @@ Các response bên dưới là ví dụ. `expiresIn: 3600` minh họa số giây
 
 ## POST /auth/register  (public)
 Request:  { "email": "a@example.com", "password": "12345678" }
-Quy tắc:  email trim + chuyển chữ thường, đúng định dạng; password tối thiểu 8 ký tự
+Quy tắc:  email trim + chuyển chữ thường, đúng định dạng; password tối thiểu 8 ký tự, tối đa 72 byte UTF-8 (giới hạn bcrypt); từ chối trường ngoài DTO
 201:      { "id": "uuid", "email": "a@example.com", "loyaltyPoints": 0 }
 Lỗi:      400 VALIDATION_ERROR (dữ liệu sai) | 409 (email đã tồn tại)
 Lưu ý:    không tự đăng nhập; không bao giờ trả passwordHash
@@ -25,6 +25,6 @@ Request:  { "email": "a@example.com", "password": "12345678" }
 Lỗi:      401 (sai thông tin; không tiết lộ email có tồn tại hay không)
 
 ## GET /auth/me  (cần JWT)
-Endpoint bổ trợ đề xuất, không thay API bắt buộc của đề và không phải điều kiện hoàn thành auth khi chưa được nhóm chốt.
+Endpoint bổ trợ đã triển khai, không thay API bắt buộc của đề.
 200:      { "id": "uuid", "email": "a@example.com", "loyaltyPoints": 0 }
 Lỗi:      401 UNAUTHORIZED

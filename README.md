@@ -1,173 +1,99 @@
-# BrewLite
+﻿# BrewLite
 
-Ứng dụng web đặt cà phê và thanh toán không tiền mặt cho môn Công nghệ Phần mềm.
+Ứng dụng web đặt cà phê và thanh toán mô phỏng cho môn Công nghệ Phần mềm.
+Frontend Next.js ở `frontend/`; REST API NestJS và PostgreSQL/Prisma ở `backend/`.
+Nguồn yêu cầu: [SRS](docs/requirements/srs.md), [API](API.md), [auth contract](docs/auth-contract.md), [tài liệu dự án](docs/README.md), [phân công nhóm](docs/team-assignments.md).
 
-Repo này dùng chung cho báo cáo giữa kỳ (Assignment 1) và cuối kỳ (Assignment 2).
-Xem [bộ tài liệu chuẩn](docs/README.md), [SRS](docs/requirements/srs.md)
-và [bảng đối chiếu hai rubric](docs/project-overview.md)
-trước khi triển khai. Các tài liệu ngày 09/10 chỉ dùng tham khảo lịch sử khi khác bộ yêu cầu hiện hành.
-Thành viên mới xem [phân công nhóm](docs/team-assignments.md) để biết phần phụ trách và cách phối hợp.
-Frontend/backend dùng [quy ước đặt tên API](API.md) để thống nhất endpoint, tên hàm và trường dữ liệu.
-Tài liệu yêu cầu không phải xác nhận chức năng đã hoàn thành; cấu trúc chạy hiện tại vẫn là `frontend/` và `backend/`.
+## Phần đã triển khai
 
-## Công nghệ và phạm vi
+- API sản phẩm, đăng ký/đăng nhập email, JWT, tạo/đọc đơn, mock payment WALLET/CARD và health.
+- PostgreSQL lưu tài khoản, catalogue, snapshot đơn, payment/idempotency key và điểm thưởng.
+- Transaction/version giữ kho, payment lỗi trả kho, retry cùng đơn giữ lại kho. Khuyến mãi và loyalty theo SRS.
+- Menu/chi tiết và form auth gọi API thật. Hàm frontend cho mọi API nằm tại [api.ts](frontend/src/lib/api.ts).
 
-- Frontend: Next.js, React, TypeScript, Tailwind CSS.
-- Backend: NestJS, TypeScript, REST API.
-- Dự kiến: PostgreSQL, Prisma, JWT, Mock Payment Gateway, Docker Compose.
-- Quy trình: Agile Scrum, branch riêng và Pull Request để review.
+Giỏ hàng hiện vẫn là giao diện mẫu. Trang checkout, lịch sử đơn, PWA, production và nghiệm thu toàn bộ SRS là các việc tiếp theo; có API không đồng nghĩa đã hoàn thành các luồng giao diện đó.
 
-Task 1 cung cấp trang khởi tạo frontend và `GET /` trả `Hello World!` từ backend.
-Database, authentication, payment và API nghiệp vụ thuộc các task tiếp theo; hiện chưa cần PostgreSQL để chạy.
+## Cài đặt local
 
-## Cấu trúc
-
-```text
-BrewLite/
-├── frontend/
-│   ├── public/
-│   ├── src/app/
-│   ├── .env.example
-│   └── package.json
-├── backend/
-│   ├── src/
-│   ├── test/
-│   ├── .env.example
-│   └── package.json
-├── .gitignore
-├── README.md
-└── .git/
-```
-
-## Tài liệu BA/QA/UML
-
-- [Baseline yêu cầu Week 1](docs/requirements/week-1-requirements.md)
-- [UML và ERD](docs/uml/brewlite-uml.md)
-- [Smoke checklist và kết quả Week 1](docs/qa/week-1-smoke-checklist.md)
-
-Chỉ có một Git repository ở root. Không chạy `git init` trong frontend hoặc backend.
-
-## Chạy local
-
-Yêu cầu Node.js 24 LTS và npm (môi trường kiểm tra: Node 24.15.0, npm 11.12.1).
-Chạy từ root bằng PowerShell. Dùng `npm.cmd` để tránh lỗi execution policy
-chặn `npm.ps1`; trên macOS/Linux dùng `npm` và `cp` thay cho `Copy-Item`.
+Yêu cầu Node.js 24 LTS, npm và PostgreSQL. Chạy từ root bằng PowerShell; macOS/Linux dùng `npm` và `cp` tương ứng.
 
 ```powershell
 npm.cmd --prefix frontend ci
 npm.cmd --prefix backend ci
-if (!(Test-Path frontend/.env.local)) {
-  Copy-Item frontend/.env.example frontend/.env.local
-}
-if (!(Test-Path backend/.env)) {
-  Copy-Item backend/.env.example backend/.env
-}
+if (!(Test-Path frontend/.env.local)) { Copy-Item frontend/.env.example frontend/.env.local }
+if (!(Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
 ```
 
-Không commit `.env` hoặc `.env.local`. Chỉ commit `.env.example`.
-Env mẫu không chứa secret thật; `DATABASE_URL` và `JWT_SECRET` để trống
-vì scaffold chưa dùng DB/Auth. Điền cấu hình DB và secret riêng khi triển khai các module đó.
+Điền cấu hình trước khi chạy backend:
 
-| File local | Biến | Giá trị/cách dùng |
+| File | Biến | Giá trị/cách dùng |
 | --- | --- | --- |
-| `frontend/.env.local` | `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:3001`, origin API công khai, không có `/api` hoặc dấu `/` cuối. |
-| `backend/.env` | `PORT` | `3001`; backend mặc định cũng là 3001. |
-| `backend/.env` | `DATABASE_URL` | Chưa dùng; sau này là URL PostgreSQL riêng của môi trường backend. |
-| `backend/.env` | `JWT_SECRET` | Chưa dùng; sau này là secret riêng của backend. |
+| `frontend/.env.local` | `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:3001`; chỉ origin, không `/api`. |
+| `backend/.env` | `PORT` | `3001`. |
+| `backend/.env` | `FRONTEND_ORIGIN` | `http://localhost:3000`; đổi thành origin web thực tế khi deploy. |
+| `backend/.env` | `DATABASE_URL` | `postgresql://<user>:<password>@localhost:5432/brewlite`; database phải tồn tại. |
+| `backend/.env` | `JWT_SECRET` | Secret ngẫu nhiên ít nhất 32 byte, chỉ ở backend. |
+| `backend/.env` | `JWT_EXPIRES_IN` | Số giây nguyên dương, mặc định `3600`. |
+| `backend/.env` | `MOCK_PAYMENT_RESULT` | `SUCCEEDED` hoặc `FAILED`; mặc định thành công, không nhận từ client. |
 
-Theo spec, chỉ dùng `NEXT_PUBLIC_API_BASE_URL` cho API origin. Nếu đã có
-`frontend/.env.local` từ scaffold cũ, đổi tên `NEXT_PUBLIC_API_URL` thành
-`NEXT_PUBLIC_API_BASE_URL`, giữ giá trị URL phù hợp. Không đưa secret/URL database
-vào biến `NEXT_PUBLIC_*` vì chúng công khai trong trình duyệt.
-Consumer API dùng `process.env.NEXT_PUBLIC_API_BASE_URL` và nối endpoint
-(ví dụ `/products`); trang khởi tạo hiện chưa gọi API. Khởi động lại dev server
-sau khi sửa env; nếu dùng production, build lại để cập nhật biến public.
-
-Terminal 1:
+Tạo JWT secret riêng để điền vào file local:
 
 ```powershell
-cd frontend
-npm.cmd run dev
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 ```
 
-Mở http://localhost:3000 để xem trang BrewLite.
-Lệnh dev cố định cổng 3000; Next.js nạp env từ `frontend/.env.local`.
-
-Terminal 2:
+Không commit `.env`/`.env.local`; không đặt secret trong `NEXT_PUBLIC_*`.
+Backend đọc `.env` từ thư mục backend; biến terminal có ưu tiên cao hơn.
 
 ```powershell
-cd backend
-npm.cmd run start:dev
+npm.cmd --prefix backend run db:generate
+npm.cmd --prefix backend run db:migrate
+npm.cmd --prefix backend run db:seed
 ```
 
-Mở http://localhost:3001 để nhận `Hello World!`.
-Backend đọc `.env` từ thư mục backend, lấy `PORT` (mặc định 3001),
-và bật CORS cho `http://localhost:3000`. Biến môi trường trong terminal có ưu tiên hơn `.env`.
-Đảm bảo port 3000 và 3001 đang trống. Dùng Ctrl+C để dừng từng server.
-Nếu cổng bị chiếm (`EADDRINUSE`), dừng server cũ trước khi chạy lại để giữ đúng
-origin CORS. Nếu terminal đã đặt `PORT` khác, xóa bằng `Remove-Item Env:PORT`
-trước khi chạy backend với cấu hình local 3001.
+Seed tạo bốn sản phẩm, size S/M/L, hai topping và mã `BREW10K` giảm 10.000đ cho subtotal từ 50.000đ. Iced latte có stock 0 để minh họa hết hàng. Seed lại giữ nguyên giá/kho/cấu hình hiện có; migration không reset dữ liệu. Không có tài khoản mặc định.
 
-## Chạy bản build local
+## Chạy ứng dụng
 
-Từ root, build cả hai ứng dụng:
+Hai terminal riêng:
 
 ```powershell
-npm.cmd --prefix frontend run build
-npm.cmd --prefix backend run build
-```
-
-Chạy ở hai terminal riêng từ root:
-
-```powershell
-# Terminal 1: frontend :3000
-npm.cmd --prefix frontend start
+# Terminal 1: web :3000
+npm.cmd --prefix frontend run dev
 ```
 
 ```powershell
-# Terminal 2: backend :3001
-npm.cmd --prefix backend run start:prod
+# Terminal 2: API :3001
+npm.cmd --prefix backend run start:dev
 ```
 
-## Kiểm tra trước Pull Request
+Mở http://localhost:3000/menu, đăng ký tại `/register`, đăng nhập tại `/login`.
+Đăng ký không tự đăng nhập. Token chỉ ở bộ nhớ React; reload/đóng tab cần login lại. Xem [ADR-003](docs/architecture/adr/003-auth-token.md).
 
 ```powershell
+Invoke-RestMethod http://localhost:3001/health
+Invoke-RestMethod http://localhost:3001/products
+```
+
+Health trả 200 khi PostgreSQL trả lời, 503 khi DB không sẵn sàng. `GET /` vẫn trả `Hello World!`, không thay health. API riêng dùng `Authorization: Bearer <accessToken>`; POST order/payment còn cần `Idempotency-Key` UUID riêng mỗi phép toán. Request/response và retry: [API.md](API.md).
+
+## Kiểm tra
+
+```powershell
+npm.cmd --prefix frontend test
 npm.cmd --prefix frontend run lint
 npm.cmd --prefix frontend run build
+npm.cmd --prefix backend test
 npm.cmd --prefix backend run lint
 npm.cmd --prefix backend run build
-npm.cmd --prefix backend test
 npm.cmd --prefix backend run test:e2e
 ```
 
-Smoke test khi hai dev server đang chạy:
+`test:e2e` tự tạo PostgreSQL tạm bằng `embedded-postgres`, áp migration/seed, chạy HTTP tests rồi dừng/xóa cluster tạm. Lệnh không dùng hoặc reset `DATABASE_URL` local, không cần Docker; chạy bằng tài khoản thường vì PostgreSQL không chạy dưới root. Bao gồm auth, validation, ownership, tranh kho, concurrent/replay keys, payment lỗi/retry, snapshot, promotion, loyalty và hủy nội bộ. Đây là kiểm thử API, chưa phải browser E2E checkout theo SRS.
 
-```powershell
-(Invoke-WebRequest http://localhost:3000 -UseBasicParsing).StatusCode
-(Invoke-WebRequest http://localhost:3001 -UseBasicParsing).Content
-(Invoke-WebRequest http://localhost:3001 -UseBasicParsing -Headers @{ Origin = 'http://localhost:3000' }).Headers['Access-Control-Allow-Origin']
-```
+Bản build local: chạy `npm.cmd --prefix frontend start` và `npm.cmd --prefix backend run start:prod` ở hai terminal sau khi build. Đảm bảo port 3000/3001 trống; restart dev server sau khi đổi env và build lại frontend nếu đổi biến public trong production.
 
-Kết quả mong đợi: `200`, `Hello World!` và `http://localhost:3000`.
+## Làm việc nhóm
 
-## Git và làm việc nhóm
-
-Remote default hiện là `master`; nhánh đang làm việc là `develop`.
-Nhóm thống nhất nhánh đích PR trước khi tích hợp. Mỗi thành viên dùng branch riêng, ví dụ
-`feature/product-api`, `feature/menu`, `feature/cart`, `feature/auth`.
-Tạo Pull Request, nhờ thành viên khác review và chạy kiểm tra trước khi merge.
-
-Commit theo Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`.
-
-```powershell
-git add .
-git diff --cached --stat
-git commit -m "docs: standardize local setup"
-git push -u origin HEAD
-```
-
-Remote: https://github.com/Call-MeK/BrewLite.git. Push cần quyền truy cập GitHub và mạng.
-
-Definition of Done: code chạy được, build không lỗi, đúng acceptance criteria,
-có commit rõ ràng và được review; các task nghiệp vụ cần validate input,
-loading/error state cho UI và cập nhật README khi cần.
+Chỉ có một Git repository ở root. Dùng branch riêng và Pull Request, commit Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`). Đối chiếu [traceability](docs/traceability-matrix.md) và acceptance criteria trước khi ghi nghiệm thu.
+Remote: https://github.com/Call-MeK/BrewLite.git.
