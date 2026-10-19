@@ -1,5 +1,7 @@
 # BrewLite — Architectural Design Specification
 
+> **Bản sao lịch sử (13/10/2026):** Đây là bản trùng của spec ngày 09/10. Dùng [bộ yêu cầu chung hiện hành](../../README.md) và [thiết kế tổng hợp A1/A2](../../project-overview.md) để triển khai; nội dung dưới đây chỉ giữ làm tham khảo.
+
 **Ngày:** 2026-10-09  
 **Phiên bản:** 1.0 — Design selected / awaiting written-spec review  
 **Dự án:** BrewLite — Web đặt cà phê không dùng tiền mặt, môn Công nghệ Phần mềm  

@@ -1,0 +1,55 @@
+@startuml
+title BrewLite — Trạng thái đơn hàng (FR-13; A1 trang PDF 8)
+hide empty description
+skinparam shadowing false
+skinparam defaultFontName Arial
+
+[*] --> PENDING : Tạo đơn / giữ kho nguyên tử
+PENDING --> PAID : Thanh toán thành công
+PENDING --> PAYMENT_FAILED : Thanh toán thất bại / trả kho một lần
+PAYMENT_FAILED --> PENDING : Thử lại [giữ lại đủ kho] / payment key mới
+PENDING --> CANCELLED : Hủy / trả kho một lần
+PAYMENT_FAILED --> CANCELLED : Hủy / không trả kho lặp
+PAID --> CANCELLED : Hủy trước khi pha chế / bù dữ liệu một lần
+PAID --> PREPARING : Bắt đầu pha chế
+PREPARING --> READY : Đồ uống sẵn sàng
+READY --> COMPLETED : Đã giao tại quầy
+COMPLETED --> [*]
+CANCELLED --> [*]
+
+note left of PENDING
+  FR-07, FR-08: tạo đơn + snapshot + giữ kho
+  trong transaction; kiểm tra stock và version.
+  Thiếu kho / xung đột: rollback toàn bộ.
+  Không giữ transaction trong lúc chờ khách.
+end note
+
+note right of PAYMENT_FAILED
+  FR-10, FR-11, FR-15: lỗi thanh toán giữ giỏ.
+  Cố ý thử lại: cùng đơn, payment key mới;
+  phải kiểm tra và giữ kho trước khi về PENDING.
+  Thiếu kho: vẫn PAYMENT_FAILED.
+  Retry do mạng: giữ nguyên key, trả kết quả cũ;
+  không phải một lần chuyển trạng thái mới.
+end note
+
+note left of PAID
+  FR-16, FR-17: giá đã áp dụng mã hợp lệ;
+  cộng floor(thực trả / 10000) điểm đúng một lần.
+  Hai key khác nhau không được tạo hai thành công.
+end note
+
+note right of CANCELLED
+  Đề xuất chính sách bù dữ liệu cho PAID → CANCELLED:
+  hoàn thanh toán mô phỏng, trả kho và bù điểm một lần;
+  giữ lịch sử Payment / LoyaltyTransaction.
+  Không hoàn tiền qua ngân hàng thật.
+end note
+
+legend bottom
+  Các cạnh trên là toàn bộ chuyển trạng thái hợp lệ; cạnh khác bị chặn.
+  PREPARING / READY / COMPLETED và hủy đơn: thao tác nội bộ có kiểm soát / test.
+  Không yêu cầu timer tự chuyển trạng thái hoặc cơ chế hết hạn 15 phút.
+  FR-09 đã được loại khỏi baseline; không tái sử dụng mã này.
+endlegend
+@enduml

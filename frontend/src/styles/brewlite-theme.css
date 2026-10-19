@@ -1,0 +1,15 @@
+/* MÀU SẮC BREWLITE - muốn đổi màu toàn app chỉ sửa file này */
+:root {
+  --bw-stage: #1e1e1e;         
+  --bw-bg: #fce4c2;            
+  --bw-field: #fffbf5;         
+  --bw-ink: #3f241b;           
+  --bw-ink-muted: #7b5e50;     
+  --bw-brand: #6b1f17;
+  --bw-accent: #d9420f;        
+  --bw-accent-hover: #c23a0c;  
+  --bw-accent-border: #8a2a0a; 
+  --bw-link: #3f241b;      
+  --bw-divider: #eacfae;
+  --bw-error: #b3261e;
+}

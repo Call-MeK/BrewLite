@@ -1,6 +1,13 @@
-﻿# BrewLite
+# BrewLite
 
 Ứng dụng web đặt cà phê và thanh toán không tiền mặt cho môn Công nghệ Phần mềm.
+
+Repo này dùng chung cho báo cáo giữa kỳ (Assignment 1) và cuối kỳ (Assignment 2).
+Xem [bộ tài liệu chuẩn](docs/README.md), [SRS](docs/requirements/srs.md)
+và [bảng đối chiếu hai rubric](docs/project-overview.md)
+trước khi triển khai. Các tài liệu ngày 09/10 chỉ dùng tham khảo lịch sử khi khác bộ yêu cầu hiện hành.
+Thành viên mới xem [phân công nhóm](docs/team-assignments.md) để biết phần phụ trách và cách phối hợp.
+Tài liệu yêu cầu không phải xác nhận chức năng đã hoàn thành; cấu trúc chạy hiện tại vẫn là `frontend/` và `backend/`.
 
 ## Công nghệ và phạm vi
 
@@ -30,6 +37,12 @@ BrewLite/
 ├── README.md
 └── .git/
 ```
+
+## Tài liệu BA/QA/UML
+
+- [Baseline yêu cầu Week 1](docs/requirements/week-1-requirements.md)
+- [UML và ERD](docs/uml/brewlite-uml.md)
+- [Smoke checklist và kết quả Week 1](docs/qa/week-1-smoke-checklist.md)
 
 Chỉ có một Git repository ở root. Không chạy `git init` trong frontend hoặc backend.
 
