@@ -7,6 +7,7 @@ Xem [bộ tài liệu chuẩn](docs/README.md), [SRS](docs/requirements/srs.md)
 và [bảng đối chiếu hai rubric](docs/project-overview.md)
 trước khi triển khai. Các tài liệu ngày 09/10 chỉ dùng tham khảo lịch sử khi khác bộ yêu cầu hiện hành.
 Thành viên mới xem [phân công nhóm](docs/team-assignments.md) để biết phần phụ trách và cách phối hợp.
+Frontend/backend dùng [quy ước đặt tên API](API.md) để thống nhất endpoint, tên hàm và trường dữ liệu.
 Tài liệu yêu cầu không phải xác nhận chức năng đã hoàn thành; cấu trúc chạy hiện tại vẫn là `frontend/` và `backend/`.
 
 ## Công nghệ và phạm vi

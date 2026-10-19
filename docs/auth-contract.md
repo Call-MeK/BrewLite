@@ -6,6 +6,7 @@ Nguồn yêu cầu: [SRS — FR-05/06](requirements/srs.md). Quyết định tok
 Các response bên dưới là ví dụ. `expiresIn: 3600` minh họa số giây hiệu lực, không ấn định TTL một giờ; giá trị thật phải khớp cấu hình backend và `exp` của JWT sau khi ADR được chốt. Không mặc nhiên chọn sessionStorage/localStorage từ tài liệu cũ.
 
 ## Quy ước chung
+- Tên endpoint, hàm và trường JSON theo [API.md](../API.md).
 - Dữ liệu JSON; id là UUID; thời gian theo ISO 8601 UTC.
 - Lỗi đề xuất có dạng `{ "statusCode": <HTTP status>, "code": "...", "message": "..." }`; statusCode phải khớp HTTP status, không luôn là 400. Dữ liệu sai là 400, xác thực sai là 401, email trùng là 409.
 - Gọi API cần đăng nhập: header  Authorization: Bearer <accessToken>
