@@ -1,68 +1,36 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-
-// Dữ liệu TEXT
-export const mockProducts = [
-  {
-    id: 1,
-    name: "Espresso",
-    desc: "Rich & bold",
-    price: 30000,
-    // Link ảnh thật từ Unsplash
-    imageUrl:
-      "https://images.unsplash.com/photo-1502462041640-b3d7e50d0662?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D",
-
-    isAvailable: true,
-  },
-  {
-    id: 2,
-    name: "Flat white",
-    desc: "Smooth & balanced",
-    price: 45000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=400&q=80",
-    isAvailable: true,
-  },
-  {
-    id: 3,
-    name: "Cappuccino",
-    desc: "Soft & velvety",
-    price: 45000,
-    imageUrl:
-      "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=400&q=80",
-    isAvailable: true,
-  },
-  {
-    id: 4,
-    name: "Iced latte",
-    desc: "Cool & creamy",
-    price: 50000,
-    // Thử làm hỏng link này để test tính năng lỗi ảnh
-    imageUrl:
-      "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80",
-    isAvailable: false,
-  },
-];
+import { ApiError, getProducts, type Product } from "@/lib/api";
+import ProductImage from "@/components/ui/ProductImage";
 
 function MenuPage() {
   const [cartCount, setCartCount] = useState(0);
-  // Trạng thái của toàn bộ trang (loading | error | empty | success)
-  const [pageState, setPageState] = useState("loading");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [pageState, setPageState] = useState<"loading" | "error" | "empty" | "success">("loading");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [attempt, setAttempt] = useState(0);
   const handleAddToCart = () => {
     setCartCount((prev) => prev + 1);
   };
-  // Giả lập gọi API: Chờ 1.5 giây để thấy được hiệu ứng Loading Skeleton
   useEffect(() => {
-    const fetchData = () => {
-      setPageState("loading");
-      setTimeout(() => {
-        setPageState("success"); // Đổi chữ "success" thành "error" hoặc "empty" để test các màn hình khác
-      }, 1500);
-    };
-    fetchData();
-  }, []);
+    const controller = new AbortController();
+    getProducts({ signal: controller.signal }).then((data) => {
+      if (controller.signal.aborted) return;
+      setProducts(data);
+      setPageState(data.length ? "success" : "empty");
+    }).catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      setErrorMessage(error instanceof ApiError ? error.message : "Không thể tải menu. Vui lòng thử lại.");
+      setPageState("error");
+    });
+    return () => controller.abort();
+  }, [attempt]);
+
+  function retry() {
+    setPageState("loading");
+    setAttempt((previous) => previous + 1);
+  }
   return (
     <div className="min-h-screen bg-[#F9CC8D] max-w-md mx-auto relative shadow-xl overflow-hidden flex flex-col">
       {/* Header */}
@@ -71,7 +39,7 @@ function MenuPage() {
         <div className="flex items-center gap-3">
           {/* Avatar (Dùng chữ cái đầu làm hình đại diện) */}
           <div className="w-10 h-10 rounded-full bg-[#D84315]/10 flex items-center justify-center text-[#D84315] font-bold text-lg">
-            A
+            B
           </div>
 
           {/* Lời chào & Tên */}
@@ -79,12 +47,12 @@ function MenuPage() {
             <p className="text-[10px] font-bold text-[#D84315] uppercase tracking-wider">
               BrewLite
             </p>
-            <h1 className="text-lg font-bold text-[#3E2723]">Chào An 👋</h1>
+            <h1 className="text-lg font-bold text-[#3E2723]">Chào bạn 👋</h1>
           </div>
         </div>
 
         {/* Nút Giỏ hàng */}
-        <button className="p-2 bg-white rounded-full shadow-sm border border-[#3E2723]/10 relative active:scale-95 transition-transform">
+        <button aria-label="Giỏ hàng" className="p-2 bg-white rounded-full shadow-sm border border-[#3E2723]/10 relative active:scale-95 transition-transform">
           🛒
           {cartCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-[#D84315] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
@@ -104,7 +72,7 @@ function MenuPage() {
 
       {/* 1. TRẠNG THÁI ĐANG TẢI (LOADING SKELETON) */}
       {pageState === "loading" && (
-        <div className="grid grid-cols-2 gap-4 px-6 pb-24 overflow-y-auto">
+        <div role="status" aria-label="Đang tải menu" className="grid grid-cols-2 gap-4 px-6 pb-24 overflow-y-auto">
           {[1, 2, 3, 4].map((skeleton) => (
             <div
               key={skeleton}
@@ -128,12 +96,11 @@ function MenuPage() {
           <h3 className="text-xl font-bold text-[#3E2723] mb-3">
             Oops, có lỗi xảy ra!
           </h3>
-          <p className="text-sm text-[#3E2723] opacity-60 mb-8">
-            Chúng tôi đang gặp vấn đề khi tải menu. Hãy thử lại để tiếp tục đặt
-            hàng nhé.
+          <p role="alert" className="text-sm text-[#3E2723] opacity-60 mb-8">
+            {errorMessage}
           </p>
           <button
-            onClick={() => setPageState("loading")} // Nút thử lại
+            onClick={retry}
             className="bg-[#D84315] text-white font-bold py-3 px-8 rounded-xl active:bg-orange-800 transition-colors"
           >
             Thử lại
@@ -161,7 +128,7 @@ function MenuPage() {
       {/* 4. TRẠNG THÁI CÓ DỮ LIỆU (SUCCESS) & HẾT MÓN */}
       {pageState === "success" && (
         <div className="grid grid-cols-2 gap-4 px-6 pb-24 overflow-y-auto">
-          {mockProducts.map((product) => (
+          {products.map((product) => (
             <div
               key={product.id}
               className="bg-white rounded-2xl p-3 flex flex-col shadow-sm border border-orange-50 relative"
@@ -171,20 +138,11 @@ function MenuPage() {
                 className={!product.isAvailable ? "pointer-events-none" : ""}
               >
                 <div className="relative aspect-square bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-5xl overflow-hidden">
-                  {/* {product.image} */}
-                  <Image
+                  <ProductImage
+                    key={product.imageUrl}
                     src={product.imageUrl}
                     alt={product.name}
-                    fill // Thuộc tính yêu cầu ảnh tự động co giãn lấp đầy thẻ div cha
-                    priority
-                    sizes="(max-width: 768px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-300 hover:scale-105"
-                    onError={(e) => {
-                      // Xử lý thay thế ảnh lỗi đặc thù cho thẻ Image của Next.js
-                      e.currentTarget.srcset = "";
-                      e.currentTarget.src =
-                        "https://placehold.co/400x400/e2e8f0/94a3b8?text=No+Image";
-                    }}
+                    sizes="(max-width: 448px) 50vw, 180px"
                   />
                   {!product.isAvailable && (
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10">
@@ -198,10 +156,10 @@ function MenuPage() {
                 <div className="flex-1">
                   <h3 className="font-bold text-[#3E2723]">{product.name}</h3>
                   <p className="text-[11px] text-[#3E2723] opacity-60 mb-2">
-                    {product.desc}
+                    {product.description}
                   </p>
                   <p className="font-bold text-[#3E2723] text-sm">
-                    {product.price.toLocaleString("vi-VN")}đ
+                    {product.basePrice.toLocaleString("vi-VN")}đ
                   </p>
                 </div>
               </Link>
@@ -223,33 +181,6 @@ function MenuPage() {
         </div>
       )}
 
-      {/* Footer nhỏ ở dưới cùng */}
-      <div className="absolute bottom-2 left-0 w-full flex justify-center gap-2 p-2 bg-white/80 backdrop-blur-sm border-t border-gray-200">
-        <button
-          onClick={() => setPageState("loading")}
-          className="text-[10px] bg-gray-200 px-2 py-1 rounded"
-        >
-          Test Loading
-        </button>
-        <button
-          onClick={() => setPageState("error")}
-          className="text-[10px] bg-red-200 px-2 py-1 rounded"
-        >
-          Test Error
-        </button>
-        <button
-          onClick={() => setPageState("empty")}
-          className="text-[10px] bg-yellow-200 px-2 py-1 rounded"
-        >
-          Test Empty
-        </button>
-        <button
-          onClick={() => setPageState("success")}
-          className="text-[10px] bg-green-200 px-2 py-1 rounded"
-        >
-          Test Success
-        </button>
-      </div>
     </div>
   );
 }

@@ -1,35 +1,46 @@
-# BrewLite backend
+﻿# BrewLite backend
 
-NestJS REST API, TypeScript. Scaffold hiện có `GET /` trả `Hello World!`;
-chưa triển khai PostgreSQL/Prisma, Auth hoặc API nghiệp vụ.
+NestJS REST API, TypeScript, PostgreSQL/Prisma. Các endpoint và schema response tại [API.md](../API.md); cấu hình/chạy hai ứng dụng tại [README root](../README.md).
 
-Hướng dẫn đầy đủ và smoke test: [README root](../README.md).
-Yêu cầu Node.js 24 LTS; các lệnh dưới đây chạy bằng PowerShell trong `backend/`.
-Trên macOS/Linux dùng `npm` và `cp`.
+## Cấu hình và chạy
+
+Yêu cầu Node.js 24 LTS và PostgreSQL. Trong `backend/`:
 
 ```powershell
 npm.cmd ci
-if (!(Test-Path .env)) {
-  Copy-Item .env.example .env
-}
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Điền `DATABASE_URL` và `JWT_SECRET` (ít nhất 32 byte) vào `.env`. Mặc định `PORT=3001`, `FRONTEND_ORIGIN=http://localhost:3000`, `JWT_EXPIRES_IN=3600`. `MOCK_PAYMENT_RESULT=SUCCEEDED|FAILED` chọn kết quả mock cho WALLET/CARD; restart backend sau khi đổi. Mật khẩu băm bcrypt cost 10; không có shared API key. Biến terminal có ưu tiên hơn `.env`.
+
+```powershell
+npm.cmd run db:generate
+npm.cmd run db:migrate
+npm.cmd run db:seed
 npm.cmd run start:dev
 ```
 
-Mở http://localhost:3001 để nhận `Hello World!`.
-Backend nạp `.env` trong thư mục backend, đọc `PORT=3001` (mặc định 3001),
-cho phép CORS từ `http://localhost:3000`. Env trong terminal có ưu tiên hơn `.env`;
-nếu đã đặt `PORT` khác, xóa bằng `Remove-Item Env:PORT` để dùng cấu hình local.
+Database phải tồn tại trước khi migrate. Seed idempotent giữ giá/kho hiện có; migration không reset dữ liệu. Seed không tạo tài khoản mặc định.
 
-`DATABASE_URL` và `JWT_SECRET` trong env mẫu để trống vì scaffold chưa dùng.
-Điền cấu hình DB và secret riêng khi triển khai DB/Auth; không commit `.env`.
-Frontend dùng duy nhất `NEXT_PUBLIC_API_BASE_URL=http://localhost:3001`;
-secret và URL database chỉ nằm ở môi trường backend.
+## Hành vi chính
+
+- Sản phẩm/auth/health công khai; order/payment kiểm JWT và owner; `/auth/me` trả user an toàn.
+- Key order/payment unique trong PostgreSQL theo user/phép toán. Cùng key/payload trả response ban đầu; khác payload trả 409.
+- Snapshot giữ giá/tùy chọn. Stock/version kiểm trong transaction; cập nhật kho lấy khóa theo thứ tự ổn định.
+- Payment khóa Order để serialize payment/retry/hủy. Lỗi trả kho một lần; retry giữ kho lại trên cùng đơn.
+- `BREW10K` giảm 10.000đ khi subtotal từ 50.000đ; PAID cộng `floor(total / 10000)` điểm một lần.
+- `OrdersService.transitionOrder` chỉ phục vụ nội bộ, không có endpoint public cho trạng thái nhân viên/hủy. Hủy PAID trước pha chế hoàn mock, kho và điểm trong cùng transaction, giữ lịch sử.
+- `GET /health` truy vấn PostgreSQL và trả 503 nếu DB lỗi; `GET /` giữ response scaffold.
+- JSON giới hạn 100 KB; lỗi parse không echo request, không trả stack/secret.
+
+## Kiểm thử/build
 
 ```powershell
+npm.cmd test
 npm.cmd run lint
 npm.cmd run build
-npm.cmd test
 npm.cmd run test:e2e
-# Dừng dev server trước khi chạy bản build trên cùng cổng.
 npm.cmd run start:prod
 ```
+
+Unit test không cần DB. `test:e2e` tạo PostgreSQL tạm với credential ngẫu nhiên, migrate/seed, chạy HTTP tests rồi dọn cluster; không truy cập database local hoặc cần Docker. Chạy bằng tài khoản thường, không phải root. Browser checkout, production và đo latency SRS chưa nằm trong lệnh API này.

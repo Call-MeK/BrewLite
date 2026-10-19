@@ -88,7 +88,7 @@ Nhân viên quầy, quản lý/PO, giảng viên và nhóm phát triển vẫn l
 - **AC-FR-05-1:** Đăng ký dữ liệu hợp lệ tạo user; CSDL lưu mật khẩu băm bcrypt, không lưu mật khẩu nguyên văn; response không chứa `passwordHash`. [A1 trang 5, 7; response: Nhóm]
 - **AC-FR-05-2:** Đăng nhập đúng cấp JWT; đăng nhập sai bị từ chối với 401 và không cấp JWT. [A1 trang 7; mã HTTP: Nhóm]
 - **AC-FR-05-3:** Đăng ký email đã tồn tại bị từ chối với 409, không tạo user thứ hai. Dữ liệu sai định dạng bị từ chối với 400. [Nhóm; validate theo A1 trang 5]
-- **AC-FR-05-4:** JWT sai chữ ký, sai định dạng hoặc hết hạn không truy cập được route bảo vệ. Thời hạn token và cách lưu token ở client còn chờ chốt trong [ADR-003](../architecture/adr/003-auth-token.md); ví dụ response không thay quyết định này. [A1 trang 7; chi tiết và ADR: Nhóm]
+- **AC-FR-05-4:** JWT sai chữ ký, sai định dạng hoặc hết hạn không truy cập được route bảo vệ. Tích hợp 19/10 chọn thời hạn cấu hình `JWT_EXPIRES_IN` (mặc định 3600 giây) và token trong bộ nhớ React theo [ADR-003](../architecture/adr/003-auth-token.md); response phải khớp thời hạn thật. [A1 trang 7; chi tiết và ADR: Nhóm]
 
 ### FR-06 — Đăng nhập trước checkout
 

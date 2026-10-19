@@ -15,6 +15,7 @@ Thành viên mới đọc **Tổng quan → Phân công**, rồi đọc yêu c�
 | 5. Kiểm thử | [Test cases](requirements/test-cases.md), [Smoke Week 1](qa/week-1-smoke-checklist.md), [Truy vết](traceability-matrix.md) | Phân biệt kế hoạch test, kết quả lịch sử và liên kết tới yêu cầu. |
 
 Frontend/backend làm auth đọc thêm [hợp đồng API auth](auth-contract.md) và đối chiếu SRS trước khi triển khai.
+Quy ước chung về tên endpoint, tên hàm và trường dữ liệu nằm trong [API.md](../API.md).
 
 Thiết kế kỹ thuật: [kiến trúc và ADR](architecture/README.md). Chuẩn bị chạy/deploy/bàn giao: [deployment.md](deployment.md). Các file này mô tả phương án và điều kiện cần hoàn tất, không khẳng định đã triển khai.
 
@@ -23,7 +24,7 @@ Thiết kế kỹ thuật: [kiến trúc và ADR](architecture/README.md). Chu�
 - Bản yêu cầu của Đức Phúc được chuyển thành [bản đọc nhanh](requirements/week-1-requirements.md), dùng mã SRS hiện hành; có bảng ánh xạ mã cũ.
 - ERD/module được giữ và chỉnh tại [thiết kế bổ trợ](diagrams/brewlite-uml.md). Hai sequence gốc được hợp nhất thành nguồn sequence chung; bổ sung activity, class nghiệp vụ và deployment dự kiến. Tất cả còn chờ render/review; deployment chưa xác nhận hosting thực tế.
 - [Smoke report](qa/week-1-smoke-checklist.md) giữ kết quả ngày 10/10/2026 tại commit fff2606, không phải kết quả chạy lại hoặc nghiệm thu phiên bản hiện tại.
-- Ba thư mục ngoài `requirements/`, `uml/`, `qa/` đã được chuyển vào `docs`; không duy trì bộ yêu cầu song song. Nội dung mới giữ ghi nhận tác giả bản gốc, không đồng nghĩa tác giả đã duyệt các chỉnh sửa hợp nhất.
+- Yêu cầu và báo cáo kiểm thử được giữ trong `requirements/` và `qa/`; UML hiện hành tập trung tại `diagrams/`, bản `uml/` cũ đã được dọn. Nội dung mới giữ ghi nhận tác giả bản gốc, không đồng nghĩa tác giả đã duyệt các chỉnh sửa hợp nhất.
 
 ## Căn cứ và thứ tự ưu tiên
 
@@ -33,7 +34,7 @@ Thiết kế kỹ thuật: [kiến trúc và ADR](architecture/README.md). Chu�
 
 ## Tài liệu lịch sử
 
-Spec `superpowers/specs/2026-10-09-brewlite-design.md`, bản trùng `file.md` và hai plan ngày 09/10 là bản cũ hoặc ghi chú cá nhân, được giữ trên máy và khai báo trong `.gitignore`; không cần cho bộ tài liệu bàn giao. Không dùng các hợp đồng/scope/timeline cũ thay cho bộ yêu cầu hiện hành. Phân vai trong bản tổng hợp giữ thông tin đã có; tên TV5 chưa thống nhất trong tài liệu cũ nên dùng mã TV5.
+Các bản spec/plan ngày 09/10, ghi chú triển khai AI và UML cũ đã được dọn khỏi bộ tài liệu. Dùng [SRS](requirements/srs.md), [phân công nhóm](team-assignments.md) và [nguồn UML hiện hành](diagrams/README.md). Ghi chú AI tạo về sau trong `docs/superpowers/` được Git ignore. Phân vai trong bản tổng hợp giữ thông tin đã có; tên TV5 chưa thống nhất trong tài liệu cũ nên dùng mã TV5.
 
 Ghi chú cá nhân mới đặt trong `docs/private/` (đã ignore). Chỉ đưa file chưa được Git theo dõi vào đây; với file đã tracked/staged, phải bỏ theo dõi bằng `git rm --cached` để giữ file local và ngừng đưa vào các commit mới. Ignore không xóa nội dung đã có trong lịch sử Git hoặc trên remote, và không phải cơ chế bảo mật.
 
