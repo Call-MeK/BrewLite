@@ -3,7 +3,7 @@
 import { useCartStore } from "@/store/cartStore";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-// Import 2 "mảnh ghép" vào
+
 import CartItem from "@/components/cart/CartItem";
 import CartSummary from "@/components/cart/CartSummary";
 
@@ -19,7 +19,7 @@ export default function CartPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#F9CC8D] p-4 text-[#3E2723]">
+    <div className="min-h-screen flex flex-col bg-[#F9CC8D] p-4 text-[#3E2723] max-w-md mx-auto shadow-2xl border-x border-gray-200">
       <div className="flex items-center mb-6">
         <Link
           href="/"
@@ -41,19 +41,23 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Lắp ráp các mảnh ghép CartItem */}
-          {items.map((item) => (
-            <CartItem
-              key={item.id}
-              item={item}
-              updateQuantity={updateQuantity}
-              removeItem={removeItem}
-            />
-          ))}
+        // 2. Thêm 'flex flex-col flex-1' để khối này giãn hết khoảng trống còn lại
+        <div className="flex flex-col flex-1">
+          <div className="space-y-4">
+            {items.map((item) => (
+              <CartItem
+                key={item.id}
+                item={item}
+                updateQuantity={updateQuantity}
+                removeItem={removeItem}
+              />
+            ))}
+          </div>
 
-          {/* Lắp ráp mảnh ghép Summary */}
-          <CartSummary />
+          {/* 3. Thêm 'mt-auto' để đẩy khối CartSummary xuống tít dưới đáy */}
+          <div className="mt-auto">
+            <CartSummary />
+          </div>
         </div>
       )}
     </div>
