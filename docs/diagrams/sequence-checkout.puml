@@ -1,93 +1,81 @@
-@startuml
-title BrewLite — Sequence checkout (bản nháp hòa giải 15/10/2026)
-actor Customer as C
-participant "Next.js UI" as UI
+@startuml BrewLite-Checkout
+title BrewLite – Luồng đặt hàng và thanh toán ZaloPay Sandbox
+
+actor "Khách hàng" as Customer
+participant "Next.js\nFrontend" as FE
 participant "NestJS API" as API
-database PostgreSQL as DB
-participant "Mock Payment\n(nội bộ, xác định)" as Mock
+database "PostgreSQL" as DB
+participant "ZaloPay\nSandbox" as ZLP
 
-C -> UI : Chọn món / size / topping / số lượng
-opt Chưa đăng nhập
-  UI -> API : POST /auth/login hoặc /auth/register rồi login
-  API --> UI : JWT hoặc lỗi; giữ giỏ
-end
-UI -> API : POST /orders + JWT + key + payload
-API -> API : Validate JWT/DTO; lấy user từ JWT
-alt JWT hoặc dữ liệu sai
-  API --> UI : 401 / 400; không ghi dữ liệu
-else Hợp lệ
-  API -> DB : Tìm (user, key tạo đơn)
-  alt Có key
-    API --> UI : Cùng payload: kết quả cũ; khác: 409
-  else Key mới
-    API -> DB : Đọc giá, tùy chọn, mã giảm; so expectedSubtotal
-    alt Giá đổi / tùy chọn hoặc mã sai
-      API --> UI : Lỗi; không giữ kho
-    else Giá và cấu hình hợp lệ
-      API -> DB : BEGIN; CAS stock/version; tạo PENDING + snapshot + key
-      alt Thiếu kho / xung đột / ghi lỗi
-        API -> DB : ROLLBACK toàn bộ
-        API --> UI : Lỗi an toàn; giữ giỏ
-      else Thành công
-        API -> DB : COMMIT
-        API --> UI : orderId, total, PENDING
-      end
-    end
-  end
-end
+== 1. Chọn món và chuẩn bị đơn ==
 
-note over API, DB
-  Unique (user, key) xử lý cả hai request tạo đơn đồng thời.
-  Thua unique: rollback, đọc kết quả đã commit, so payload.
-  Không chuyển sang payment khi tạo đơn chưa thành công.
-end note
+Customer -> FE: Mở menu / chi tiết sản phẩm
+FE -> API: GET /products, GET /products/:id
+API -> DB: Đọc sản phẩm, size, topping, tồn kho
+DB --> API: Dữ liệu
+API --> FE: Giá và tùy chọn khả dụng
+Customer -> FE: Thêm vào giỏ, chọn size/topping/số lượng
+FE -> FE: Lưu giỏ cục bộ, giữ pendingOrderId
 
-opt Đã có orderId hợp lệ, khách chọn WALLET/CARD
-  UI -> API : POST /payments + JWT + key + orderId/method
-  API -> API : Validate JWT/DTO
-  API -> DB : BEGIN; khóa Order, kiểm tra owner/state; tìm (user, payment key)
-  alt Không hợp lệ / không thuộc khách
-    API -> DB : ROLLBACK
-    API --> UI : 401 / 400 / 404
-  else Đã có key
-    API -> DB : Kết thúc transaction không ghi thêm
-    API --> UI : Cùng payload: kết quả cũ; khác: 409
-  else Attempt mới
-    opt PAYMENT_FAILED: retry nghiệp vụ, key mới trên cùng đơn
-      API -> DB : Kiểm tra và CAS stock/version, giữ lại toàn bộ kho
-      API -> DB : Đủ kho: PAYMENT_FAILED -> PENDING, RESERVED
-    end
-    alt Thiếu kho / trạng thái không cho thanh toán
-      API -> DB : ROLLBACK; giữ PAYMENT_FAILED nếu retry thiếu kho
-      API --> UI : 409; không gọi mock
-    else PENDING + RESERVED, không có payment thành công
-      API -> Mock : charge(orderId, Order.total, method)
-      Mock --> API : Kết quả server kiểm soát, xác định
-      alt Thành công
-        API -> DB : Payment SUCCEEDED, Order PAID/COMMITTED; EARN một lần
-      else Thất bại
-        API -> DB : Payment FAILED, PAYMENT_FAILED/RELEASED; trả kho một lần
-      end
-      API -> DB : COMMIT kết quả + key
-      API --> UI : Kết quả đã lưu
-      UI --> C : PAID: xác nhận rồi xóa giỏ; lỗi: giữ giỏ / cho retry
-    end
-  end
+== 2. Tạo đơn ==
+
+Customer -> FE: Đặt hàng (có thể dùng điểm/mã giảm giá)
+FE -> API: POST /orders + Bearer JWT
+API -> DB: BEGIN
+API -> DB: Kiểm tra user, tồn kho, khuyến mãi, điểm
+API -> DB: Trừ nguyên liệu, tạo Order PENDING + snapshot giá
+API -> DB: COMMIT
+DB --> API: Order
+API --> FE: 201 Order PENDING
+Note over FE: Giỏ hàng vẫn được giữ, chưa xóa
+
+== 3. Tạo giao dịch ZaloPay ==
+
+Customer -> FE: Chọn Ví ZaloPay / Thẻ nội địa
+FE -> API: POST /payments/zalopay (Idempotency-Key, orderId, method)
+API -> DB: Khóa đơn, kiểm tra trạng thái + key, tạo Payment PENDING
+API -> ZLP: create (HMAC-SHA256, app_trans_id, amount, embed_data)
+ZLP --> API: return_code=1 + order_url
+API -> DB: Lưu paymentUrl
+API --> FE: Payment PENDING + paymentUrl
+FE --> Customer: Mở trang thanh toán ZaloPay
+
+== 4. Xác nhận kết quả ==
+
+alt Callback được cấu hình
+  ZLP -> API: POST /payments/zalopay/callback (data, mac)
+  API -> API: Xác thực MAC bằng key2 (timing-safe)
+else Không có callback
+  FE -> API: POST /payments/zalopay/:id/sync
+  API -> ZLP: query(app_trans_id)
+  ZLP --> API: return_code + zp_trans_id + amount
 end
 
-note over API, Mock
-  Mock là hàm nội bộ nhanh, không gọi mạng hoặc chờ người dùng.
-  Lỗi bất kỳ trước commit rollback toàn bộ; không trả thành công giả.
-  Nếu thay bằng gateway thật phải thiết kế lại transaction/side effect.
-  Order lock/version và unique chặn hai key gây hai thành công.
-end note
-note over UI, API
-  Timeout: replay cùng key/payload/orderId để lấy kết quả đã lưu.
-  Chỉ tạo payment key mới sau thất bại nghiệp vụ đã xác định.
-end note
-opt Đã PAID và xem lịch sử
-  UI -> API : GET /orders/me hoặc /orders/:id + JWT
-  API -> DB : Chỉ đọc đơn của user; snapshot không đổi
-  API --> UI : Mã / trạng thái / chi tiết hoặc 401/404
+API -> DB: BEGIN
+API -> DB: Khóa đơn, đối chiếu giao dịch + số tiền
+alt Hợp lệ
+  API -> DB: Payment SUCCESS, Order PAID, cộng điểm, ghi history
+  API -> DB: COMMIT
+  API --> FE: Payment SUCCESS
+  FE -> FE: Xóa giỏ và pendingOrderId
+  FE --> Customer: Hiển thị thanh toán thành công
+else Sai tiền / trùng mã / đơn đã hủy
+  API -> DB: Payment SUCCESS + reviewReason, Order giữ nguyên
+  API -> DB: COMMIT
+  Note over API: Admin đối soát tại /admin/payments
 end
+
+== 5. Thất bại và thử lại ==
+
+alt Khách hủy hoặc ZaloPay báo hết hạn
+  FE -> API: POST /payments/zalopay/:id/cancel (hoặc sync thấy -54)
+  API -> ZLP: cancel(app_trans_id)
+  ZLP --> API: return_code=1
+  API -> DB: Payment FAILED, Order PAYMENT_FAILED
+  FE --> Customer: Giữ giỏ, cho phép thử lại
+  Customer -> FE: Thử lại
+  FE -> API: POST /payments/zalopay với Idempotency-Key mới
+  API -> DB: Order PAYMENT_FAILED → PENDING, tạo lượt mới
+end
+
 @enduml

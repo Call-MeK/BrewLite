@@ -1,67 +1,66 @@
-# BrewLite — Ma trận truy vết yêu cầu chung
+# Ma trận truy vết yêu cầu – BrewLite
 
-**Ngày:** 13/10/2026. Nguồn chuẩn: [SRS](requirements/srs.md), [UC-01](requirements/use-case-checkout.md), [test cases](requirements/test-cases.md).  
-**Cập nhật tích hợp API 19/10/2026:** Các API đã có code và test PostgreSQL; xem bảng bằng chứng bên dưới. Bảng use-case giữ phạm vi yêu cầu đầy đủ, gồm cả UI chưa hoàn thiện. Không coi kiểm thử API là nghiệm thu toàn bộ SRS hoặc browser checkout.
+Cập nhật: 2026-11-13. Mỗi yêu cầu trong [SRS](requirements/srs.md) được truy vết tới thiết kế,
+mã nguồn và kiểm thử tương ứng.
 
-UML đã có nguồn: [tổng quan](diagrams/use-cases.puml), [checkout](diagrams/use-case-checkout.puml), [FSM](diagrams/order-states.puml). Đã bổ sung bản nháp [activity](diagrams/activity-checkout.puml), [sequence](diagrams/sequence-checkout.puml), [class](diagrams/domain-classes.puml), [ERD/module](diagrams/brewlite-uml.md) và [deployment dự kiến](diagrams/deployment.puml) ngày 15/10. Chưa render/review nhóm; token đã chọn tại [ADR-003](architecture/adr/003-auth-token.md), hosting và nghiệm thu Task 2–3 còn mở. Trạng thái render ghi ở [diagrams/README.md](diagrams/README.md).
+**Trạng thái:** `Tự động` = có test chạy trong CI · `Thủ công` = kiểm tra theo kịch bản ·
+`Một phần` = đã có nhưng chưa phủ hết · `Chưa có` = chưa triển khai.
 
-## Bằng chứng tích hợp API 19/10/2026
+## 1. Yêu cầu chức năng
 
-| Yêu cầu | Code thực tế | Kiểm thử / giới hạn |
-| --- | --- | --- |
-| FR-01/02/03 | [ProductsService](../backend/src/products/products.service.ts), [Menu](../frontend/src/app/menu/page.tsx), [Detail](../frontend/src/app/product/[id]/page.tsx) | [Public API PostgreSQL](../backend/test/public-api.e2e-spec.ts), [frontend tests](../frontend/tests); chưa browser E2E. |
-| FR-05/06 | [Auth](../backend/src/auth/auth.service.ts), [guard](../backend/src/auth/auth.guard.ts), [forms](../frontend/src/components/auth/LoginForm.tsx) | [Auth unit/HTTP](../backend/src/auth/auth.controller.spec.ts), [public API](../backend/test/public-api.e2e-spec.ts); quay lại checkout còn chờ trang checkout. |
-| FR-07/08/11/14 | [Orders](../backend/src/orders/orders.service.ts), [inventory](../backend/src/orders/inventory.ts), [schema](../backend/prisma/schema.prisma) | [Commerce PostgreSQL](../backend/test/commerce.e2e-spec.ts): snapshot, validation, rollback, tranh kho, concurrent/replay keys; [parser errors](../backend/src/common/configure-app.spec.ts). |
-| FR-10/12/15 | [Payments](../backend/src/payments/payments.service.ts), [OrdersController](../backend/src/orders/orders.controller.ts), [frontend API](../frontend/src/lib/api.ts) | [Commerce PostgreSQL](../backend/test/commerce.e2e-spec.ts): WALLET/CARD, lỗi/retry cùng đơn, ownership/history; checkout/history/cart UI còn thiếu. |
-| FR-13/16/17 | [FSM](../backend/src/orders/order-state.ts), [Orders](../backend/src/orders/orders.service.ts), [Payments](../backend/src/payments/payments.service.ts) | [Tất cả cạnh FSM](../backend/src/orders/order-state.spec.ts), [promotion/loyalty/hủy](../backend/test/commerce.e2e-spec.ts); không có endpoint staff công khai. |
-| NFR-01/02/04/05/08 | [Validation/error/CORS](../backend/src/common/configure-app.ts), [migrations](../backend/prisma/migrations), [health](../backend/src/health/health.controller.ts), [runner DB tạm](../backend/test/run-e2e.mjs) | Có unit/HTTP integration trên PostgreSQL thật. Docker/production, browser E2E, đo latency và nghiệm thu toàn bộ NFR vẫn cần làm. |
+| Mã yêu cầu | Mô tả | Thiết kế / mã nguồn | Kiểm thử | Trạng thái |
+|---|---|---|---|---|
+| FR-01 | Menu, tìm kiếm, lọc danh mục | `docs/product-catalog/*`; `backend/src/modules/products/`; `frontend/src/app/menu/page.tsx`, `frontend/src/lib/menu-filter.ts` | `frontend/tests/menu-filter.test.mjs`; TS-FR-01-01 → 07 | Tự động |
+| FR-02 | Chi tiết, size, topping, giá tùy chọn | `docs/product-detail/*`; `backend/src/modules/products/`; `frontend/src/app/products/[id]/page.tsx` | TS-FR-02-01 → 06 (thủ công) | Một phần |
+| FR-03 | Giỏ hàng, tính tiền, giữ giỏ khi lỗi | `docs/cart/*`; `frontend/src/lib/cart-items.ts`, `frontend/src/app/cart/page.tsx`, `frontend/src/lib/pending-order.ts` | `frontend/tests/cart-items.test.mjs`; TS-FR-03-01 → 07 | Tự động |
+| FR-04 | Đăng ký/đăng nhập JWT, phân quyền, đổi mật khẩu | `docs/auth/*`; `backend/src/modules/auth/`; `frontend/src/app/login/page.tsx` | `orders-integration.test.cjs` (401/403/404); TS-FR-04-01 → 09 | Tự động |
+| FR-05 | Tạo đơn và thanh toán ZaloPay Sandbox | `docs/order/*`, `docs/payment/*`; `backend/src/modules/orders/orders.service.ts`, `backend/src/modules/payments/zalopay-sandbox.*`; `frontend/src/app/orders/[id]/payment/page.tsx` | `orders-integration.test.cjs`; `zalopay-change-method.test.cjs`; TS-FR-05-01 → 10 | Tự động + thủ công |
+| FR-06 | Xác nhận và lịch sử đơn | `docs/order-history/*`; `backend/src/modules/orders/orders.controller.ts`; `frontend/src/app/orders/` | `orders-integration.test.cjs` (owner/outsider, admin detail); TS-FR-06-01 → 08 | Tự động |
+| FR-07 | Order State Machine, hủy, hoàn kho/điểm | `docs/order/state-machine.md`; `backend/src/modules/orders/orders.service.ts` (`transition`, `cancel`) | `orders-integration.test.cjs` (cancel vs prepare/payment, expiry); TS-FR-07-01 → 09 | Tự động |
+| FR-08 | Thanh toán idempotent, callback, sync, cancel | `docs/payment/api-contract-payment.md`; `backend/src/modules/payments/` | `payment-idempotency.test.cjs`; `zalopay-change-method.test.cjs`; TS-FR-08-01 → 05 | Tự động + thủ công |
+| FR-09 | Kiểm soát tồn kho khi đặt đồng thời | `docs/database-design.md`; `backend/src/modules/orders/orders.service.ts` | `orders-integration.test.cjs` (stock restore); TS-FR-09-01, 03, 04; TS-E2E-STOCK-01 | Tự động |
+| FR-10 | Khuyến mãi và loyalty | `backend/src/modules/orders/`, `backend/src/modules/users/`; `frontend/src/app/checkout/page.tsx` | `frontend/tests/promotion-checkout.test.mjs`; `orders-integration.test.cjs` (points); TS-FR-10-01 → 06 | Tự động |
+| FR-11 | Quản trị sản phẩm, kho, đơn, thanh toán, người dùng | `backend/src/modules/{products,ingredients,recipes,stock-imports,payments,users}/`; `frontend/src/app/admin/` | Kiểm tra thủ công theo checklist admin; TS-FR-08-* cho đối soát thanh toán | Một phần |
 
-Lệnh chạy và cấu hình tại [README](../README.md). Không có commit/PR mới hoặc xác nhận nghiệm thu nhóm được tạo tự động từ bảng này.
+## 2. Yêu cầu phi chức năng
 
-## Chức năng
+| Mã yêu cầu | Mô tả | Thiết kế / mã nguồn | Kiểm thử | Trạng thái |
+|---|---|---|---|---|
+| NFR-01 | API đọc dữ liệu mẫu < 500 ms | Index Prisma; `docs/database-design.md` | TS-NFR-01-01 → 05 (đo thủ công bằng Postman) | Một phần |
+| NFR-02 | Bảo mật JWT, bcrypt, DTO, MAC | `backend/src/modules/auth/`, `backend/src/common/`, `zalopay-sandbox.gateway.ts` | `orders-integration.test.cjs` (401/403); unit test cancel; TS-NFR-02-04, 05 | Tự động |
+| NFR-03 | Tương thích trình duyệt, responsive | Tailwind breakpoints; `frontend/src/app/` | TS-NFR-03-01 (thủ công trên 4 trình duyệt) | Thủ công |
+| NFR-04 | Toàn vẹn dữ liệu, transaction, unique | `backend/prisma/schema.prisma`; `orders.service.ts`; `zalopay-sandbox.service.ts` | `orders-integration.test.cjs`; `zalopay-change-method.test.cjs` | Tự động |
+| NFR-05 | Loading/empty/error, xác nhận thao tác | `frontend/src/app/` các trang admin/order/payment | TS-NFR-05 (thủ công) | Thủ công |
+| NFR-06 | Tài liệu API/DB/ADR, TypeScript strict | `docs/`; `docs/architecture/adr/`; `tsconfig.json` | `npm run build` (type check) | Tự động |
+| NFR-07 | Build + test trong CI | `.github/workflows/ci.yml` (nhánh `main`) | GitHub Actions run trên `main` | Tự động |
+| NFR-08 | Cấu hình qua biến môi trường, không commit secret | `.env.example`, `docker-compose.yml` | Kiểm tra `.gitignore` + review | Thủ công |
 
-| Yêu cầu | Use-case / user story | Thiết kế / sơ đồ | Code/API dự kiến | Test dự kiến |
-| --- | --- | --- | --- | --- |
-| FR-01 | Khách xem menu | Use-case tổng quan / Menu; [Activity nháp](diagrams/activity-checkout.puml) | Products; `GET /products`; Menu UI | [TC-01](requirements/test-cases.md#tc-01) |
-| FR-02 | Khách chọn size/topping | Tổng quan / Detail; checkout / ValidateOrder | `GET /products/:id`; Detail UI; pricing | [TC-02](requirements/test-cases.md#tc-02), [TC-05](requirements/test-cases.md#tc-05) |
-| FR-03 | Khách nhận biết hết hàng | Tổng quan / Menu; checkout / ValidateOrder | Product stock và UI hết hàng | [TC-01](requirements/test-cases.md#tc-01), [TC-06](requirements/test-cases.md#tc-06) |
-| FR-04 | Khách quản lý giỏ | Tổng quan / Cart; UC-01 M1–M3 | Cart UI/state | [TC-03](requirements/test-cases.md#tc-03) |
-| FR-05 | Đăng ký/đăng nhập | Tổng quan / Auth; checkout / ValidateAuth | `/auth/register`, `/auth/login`; bcrypt/JWT | [TC-04](requirements/test-cases.md#tc-04) |
-| FR-06 | Login rồi trở lại checkout | UC-01 A1; ghi chú precondition trên checkout | Auth guard + điều hướng UI giữ giỏ | [TC-03](requirements/test-cases.md#tc-03), [TC-04](requirements/test-cases.md#tc-04) |
-| FR-07 | UC-01 tạo đơn | Checkout / CreateOrder; UC-01 M3–M7; [Sequence](diagrams/sequence-checkout.puml) / [Class](diagrams/domain-classes.puml) nháp | `POST /orders`; snapshot Order/Items | [TC-05](requirements/test-cases.md#tc-05) |
-| FR-08 | UC-01 giữ kho | Checkout / ReserveStock; UC-01 M6/E3; [Sequence](diagrams/sequence-checkout.puml) / [Class](diagrams/domain-classes.puml) nháp | Transaction + Product.version/stock | [TC-06](requirements/test-cases.md#tc-06) |
-| FR-10 | UC-01 thanh toán | Checkout / Pay; UC-01 M8–M11/E1; [Sequence nháp](diagrams/sequence-checkout.puml) | `POST /payments`; Mock Payment | [TC-07](requirements/test-cases.md#tc-07) |
-| FR-11 | UC-01 retry an toàn | Checkout / Retry và ghi chú key; UC-01 A5/A6/E2/E4; [Sequence nháp](diagrams/sequence-checkout.puml) | Orders/Payments unique key + ràng buộc thành công một lần | [TC-08](requirements/test-cases.md#tc-08) |
-| FR-12 | Khách xem đơn của mình | Tổng quan / History; UC-01 M12/E6 | `GET /orders/me`, `GET /orders/:id`; ownership | [TC-04](requirements/test-cases.md#tc-04), [TC-13](requirements/test-cases.md#tc-13) |
-| FR-13 | Theo dõi/chuyển trạng thái hợp lệ | FSM; tổng quan / Transition; UC-01 chính sách hủy | Order FSM/service nội bộ | [TC-09](requirements/test-cases.md#tc-09), [TC-11](requirements/test-cases.md#tc-11) |
-| FR-14 | UC-01 dữ liệu/giá/lỗi | Checkout / ValidateOrder; UC-01 A2–A4/E5/E6 | DTO validation, pricing, error UI | [TC-02](requirements/test-cases.md#tc-02), [TC-05](requirements/test-cases.md#tc-05) |
-| FR-15 | Khách giữ giỏ và thử lại | Checkout / Retry; UC-01 A6/E1 | Cart, checkout retry cùng Order | [TC-03](requirements/test-cases.md#tc-03), [TC-07](requirements/test-cases.md#tc-07) |
-| FR-16 | Áp mã giảm giá | Checkout / Promotion; UC-01 M2/M5/A7; [Class nháp](diagrams/domain-classes.puml) | Promotion; validation/snapshot trong Order | [TC-10](requirements/test-cases.md#tc-10) |
-| FR-17 | Cộng điểm sau PAID | Checkout / Loyalty; UC-01 M10/chính sách hủy; [Class nháp](diagrams/domain-classes.puml) | LoyaltyTransaction; cập nhật User points | [TC-11](requirements/test-cases.md#tc-11) |
+## 3. Bàn giao và triển khai
 
-FR-09 (hết hạn 15 phút) đã nghỉ dùng trong baseline; không tái sử dụng ID này. Đây là bỏ lựa chọn của nháp cũ, không bỏ yêu cầu PDF. FR-16 giữ chủ đề khuyến mãi và trở thành runtime Must; FR-17 tách rõ loyalty Must. Các thay đổi được ghi ở SRS.
+| Mã yêu cầu | Mô tả | Thiết kế / mã nguồn | Kiểm thử | Trạng thái |
+|---|---|---|---|---|
+| DEL-01 | Hướng dẫn chạy, tài khoản demo, dữ liệu seed | `README.md`; `backend/prisma/seed.ts`; `docker-compose.yml` | Chạy `docker compose up --build` từ máy sạch | Thủ công |
+| DEL-02 | Quy trình triển khai và rollback | `docs/deployment.md`; `docs/architecture/deployment-diagram.puml` | Checklist smoke test sau deploy | Đã triển khai demo: <https://brewlite-acme-1b6f1.vercel.app> + <https://brewlite-api-u2jb.onrender.com/api/v1> |
+| DEL-03 | CI trên nhánh `main` | `.github/workflows/ci.yml` | GitHub Actions | Tự động |
 
-## Phi chức năng
+## 4. Truy vết theo yêu cầu đồ án (Assignment 2)
 
-| Yêu cầu | Use-case / nhu cầu | Thiết kế liên quan | Code/cấu hình dự kiến | Test/minh chứng dự kiến |
-| --- | --- | --- | --- | --- |
-| NFR-01 | Khách dùng hệ thống an toàn | UC-01 M4/M9/E6; [ADR auth nháp](architecture/adr/003-auth-token.md) | Hash, JWT, ownership, validation, secret/log/CORS | [TC-04](requirements/test-cases.md#tc-04), [TC-16](requirements/test-cases.md#tc-16) |
-| NFR-02 | UC-01 không làm lệch dữ liệu | UC-01 M6/M10/E3–E7; FSM; [Sequence](diagrams/sequence-checkout.puml) / [Class](diagrams/domain-classes.puml) nháp | Transaction, version, unique và bút toán bù | [TC-06](requirements/test-cases.md#tc-06), [TC-08](requirements/test-cases.md#tc-08), [TC-11](requirements/test-cases.md#tc-11) |
-| NFR-03 | Khách dùng trên điện thoại/trình duyệt | UI / [kiến trúc web](architecture/README.md) nháp | Responsive, nhãn/bàn phím, manifest/icon | [TC-19](requirements/test-cases.md#tc-19) |
-| NFR-04 | Khách sử dụng khi dịch vụ chậm/phục hồi | UC-01 E2/E5; [deployment](diagrams/deployment.puml) chờ môi trường thật | Loading/error/retry, persistence, readiness | [TC-17](requirements/test-cases.md#tc-17) |
-| NFR-05 | Người ngoài clone/chạy được | Kiến trúc/[deployment](diagrams/deployment.puml) chờ môi trường thật | Migration/seed, Docker Compose, env, README | [TC-12](requirements/test-cases.md#tc-12) |
-| NFR-06 | Nhóm chặn thay đổi lỗi trước merge | Quy trình PR/CI Task 4 cần bổ sung | Workflow install/lint/unit/build, required checks | [TC-15](requirements/test-cases.md#tc-15) |
-| NFR-07 | Bàn giao production có thể phục hồi | ADR/[deployment](diagrams/deployment.puml) chờ môi trường thật | Docker image/tag, registry nếu cần, CI secrets, deploy/migrate/smoke/rollback | [TC-16](requirements/test-cases.md#tc-16) |
-| NFR-08 | Chứng minh chức năng hoạt động | Use-case/UML → các ca kiểm thử | Test API/UI Sprint 1, unit, integration PostgreSQL, browser E2E | [TC-01](requirements/test-cases.md#tc-01)–[TC-13](requirements/test-cases.md#tc-13) |
-| NFR-09 | Phản hồi nhanh với dữ liệu mẫu | Protocol đo trong SRS; kiến trúc Task 3 | Các API nghiệp vụ và môi trường benchmark | [TC-14](requirements/test-cases.md#tc-14) |
-| NFR-10 | Giảng viên/nhóm truy vết kết quả | Ma trận này và [bảng rubric](project-overview.md) | Git/PR, tài liệu, report, backlog/burndown, quyền repo | [TC-18](requirements/test-cases.md#tc-18) |
+| Hạng mục | Yêu cầu | Tài liệu / mã nguồn | Trạng thái |
+|---|---|---|---|
+| Task 4.4 | Đặc tả use case, activity, sequence | `docs/*/usecase-*.md`, `docs/*/activity-*.puml`, `docs/diagrams/sequence-checkout.puml` | Đạt |
+| Task 5.1 | Thanh toán không tiền mặt (Ví/Thẻ) | ZaloPay Sandbox: `zalopay-sandbox.controller.ts`, `frontend/src/components/payments/zalopay-sandbox-panel.tsx` | Đạt (sandbox; mock đã gỡ) |
+| Task 5.2 | Idempotency và chống trùng giao dịch | `zalopay-sandbox.service.ts`; `docs/payment/api-contract-payment.md` mục 7; test `backend/test/payment-idempotency.test.cjs` (cùng key, khác payload, request đồng thời) | Đạt |
+| Task 5.3 | Callback/đồng bộ trạng thái thanh toán | `zalopay-sandbox.controller.ts` (`callback`, `sync`); `docs/payment/api-contract-payment.md` mục 4–5 | Đạt |
+| Task 5.4 | Đối soát và quản lý giao dịch | `payment-management.service.ts`; `frontend/src/app/admin/payments/page.tsx` | Đạt |
+| Task 8.1 | Kiểm thử và CI | `backend/test/`, `frontend/tests/`, `.github/workflows/ci.yml` | Đạt một phần (chưa có E2E trình duyệt tự động) |
+| Task 9 | Bàn giao, hướng dẫn chạy, demo | `README.md`, `docs/deployment.md`, tài khoản seed | Đạt (đã deploy demo Vercel + Render + Neon) |
 
-## Bằng chứng lịch sử đã nhận
+## 5. Khoảng trống đã biết
 
-[Smoke Week 1](qa/week-1-smoke-checklist.md), tác giả Đức Phúc: ngày 10/10/2026, commit fff2606; 9 PASS, 2 FAIL, 4 BLOCKED theo báo cáo gốc, chưa kiểm chứng log hoặc chạy lại khi hợp nhất. FR-01 liên quan SMK-10..11/13..15; FR-03 liên quan SMK-12; NFR-05/NFR-08 liên quan SMK-01..09 ở mức scaffold. Không đổi các TC nghiệp vụ sang PASS từ kết quả này; GET / không thay health check có DB.
-
-## Quy tắc cập nhật khi triển khai
-
-1. Giữ ID yêu cầu; đổi nghĩa/phạm vi phải ghi lịch sử và cập nhật UC, UML, test cùng PR.
-2. Thay cột dự kiến bằng đường dẫn file/API/test thực sự tồn tại khi hoàn thành; bổ sung commit và kết quả chạy. Không đánh dấu test PASS chỉ vì đã viết test case.
-3. Có review từng cổng A2 và hai checklist A1/A2 riêng. Không lấy ma trận dự kiến làm bằng chứng task trước đã được nghiệm thu.
+| Khoảng trống | Ảnh hưởng | Hướng xử lý |
+|---|---|---|
+| Chưa có E2E Playwright/Cypress | Luồng UI được kiểm thủ công | Bổ sung ở giai đoạn D (tái cấu trúc repo) |
+| Callback ZaloPay với app sandbox công khai (2554) | Có thể không nhận callback | Trang thanh toán tự `sync` mỗi 15 giây và có nút “Kiểm tra kết quả” |
+| Render Free ngủ sau ~15 phút | Callback/cron trễ, cold start 30–60 giây | Workflow `.github/workflows/keepalive.yml` ping `/api/v1/health` mỗi 5 phút |
+| Backend dùng `@Cron` mỗi phút | Không chạy được trên serverless thuần | Triển khai backend dạng container/VM |
+| Tồn kho giữ chỗ cho đơn bỏ dở | Đơn `PENDING` giữ nguyên liệu đến khi hủy | Cron hủy đơn quá hạn đã có; có thể tinh chỉnh TTL |

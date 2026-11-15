@@ -1,108 +1,257 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ProductSize, UserRole } from "@prisma/client";
+import * as bcrypt from "bcrypt";
+import { additionalMenuItems } from "./additional-menu-items";
+import { ingredientSeeds } from "./ingredients-data";
+import { recipeQuantity, recipeTemplates } from "./recipes-data";
+import { sampleStockImport, sampleStockImportTotal } from "./stock-import-data";
 
-export async function seed(prisma: PrismaClient) {
-  for (const [code, priceDelta] of [
-    ['S', 0],
-    ['M', 5000],
-    ['L', 10000],
-  ] as const) {
-    await prisma.sizeOption.upsert({
-      where: { code },
-      create: { code, priceDelta },
-      update: {},
-    });
-  }
-  const toppings = [
-    {
-      id: '00000000-0000-4000-8000-000000000101',
-      name: 'Vanilla syrup',
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("🌱 Bắt đầu nạp dữ liệu mẫu (Seeding BrewLite DB)...");
+
+  // 1. Xóa dữ liệu cũ theo thứ tự quan hệ
+  await prisma.orderItemTopping.deleteMany();
+  await prisma.orderItem.deleteMany();
+  await prisma.payment.deleteMany();
+  await prisma.orderStatusHistory.deleteMany();
+  await prisma.loyaltyTransaction.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.orderIngredient.deleteMany();
+  await prisma.recipeIngredient.deleteMany();
+  await prisma.stockImportItem.deleteMany();
+  await prisma.stockImport.deleteMany();
+  await prisma.productSizePrice.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.topping.deleteMany();
+  await prisma.promotion.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.ingredient.deleteMany();
+
+  // 2. Tạo User Demo & Admin Demo
+  const passwordHash = await bcrypt.hash("Demo@12345", 10);
+  const demoUser = await prisma.user.create({
+    data: {
+      email: "demo@brewlite.test",
+      passwordHash,
+      fullName: "Khách hàng Demo",
+      role: UserRole.CUSTOMER,
+      loyaltyPoints: 120, // Có sẵn 120 điểm loyalty
+    },
+  });
+  console.log(`✅ Đã tạo user demo: ${demoUser.email} / Mật khẩu: Demo@12345`);
+
+  const adminPasswordHash = await bcrypt.hash("Admin@12345", 10);
+  const adminUser = await prisma.user.create({
+    data: {
+      email: "admin@brewlite.test",
+      passwordHash: adminPasswordHash,
+      fullName: "Quản trị viên Demo",
+      role: UserRole.ADMIN,
+      loyaltyPoints: 0,
+    },
+  });
+  console.log(`✅ Đã tạo user admin: ${adminUser.email} / Mật khẩu: Admin@12345`);
+
+  // 3. Tạo Categories
+  const catCoffee = await prisma.category.create({
+    data: {
+      name: "Cà phê",
+      slug: "ca-phe",
+      displayOrder: 1,
+    },
+  });
+
+  const catTea = await prisma.category.create({
+    data: {
+      name: "Trà & Trái cây",
+      slug: "tra-trai-cay",
+      displayOrder: 2,
+    },
+  });
+  console.log("✅ Đã tạo 2 danh mục: Cà phê, Trà & Trái cây");
+
+  // 4. Tạo Toppings
+  await prisma.topping.create({
+    data: {
+      name: "Trân châu hoàng kim",
       price: 5000,
+      stock: 200,
+    },
+  });
+
+  await prisma.topping.create({
+    data: {
+      name: "Vải",
+      price: 8000,
+      stock: 150,
+    },
+  });
+
+  await prisma.topping.create({
+    data: {
+      name: "Đác thơm",
+      price: 8000,
+      stock: 100,
+    },
+  });
+  console.log(
+    "✅ Đã tạo 3 topping: Trân châu hoàng kim (5k), Vải (8k), Đác thơm (8k)",
+  );
+
+  // 5. Tạo Sản phẩm kèm giá Size phụ thu (S: 0, M: +5k, L: +10k)
+  const productsData = [
+    {
+      categoryId: catCoffee.id,
+      name: "Cà phê sữa đá",
+      basePrice: 35000,
+      imageUrl:
+        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600",
     },
     {
-      id: '00000000-0000-4000-8000-000000000102',
-      name: 'Extra espresso shot',
-      price: 10000,
+      categoryId: catCoffee.id,
+      name: "Americano",
+      basePrice: 40000,
+      imageUrl:
+        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600",
     },
+    {
+      categoryId: catCoffee.id,
+      name: "Cappuccino",
+      basePrice: 45000,
+      imageUrl:
+        "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=600",
+    },
+    {
+      categoryId: catTea.id,
+      name: "Trà đào cam sả",
+      basePrice: 39000,
+      imageUrl:
+        "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600",
+    },
+    ...additionalMenuItems.map(({ categorySlug, ...item }) => ({
+      ...item,
+      categoryId: categorySlug === "ca-phe" ? catCoffee.id : catTea.id,
+    })),
   ];
-  for (const topping of toppings) {
-    await prisma.topping.upsert({
-      where: { id: topping.id },
-      create: topping,
-      update: {},
+
+  const productIds = new Map<string, string>();
+  for (const item of productsData) {
+    const product = await prisma.product.create({
+      data: {
+        ...item,
+        sizePrices: {
+          create: [
+            { size: ProductSize.S, priceAdjustment: 0 },
+            { size: ProductSize.M, priceAdjustment: 5000 },
+            { size: ProductSize.L, priceAdjustment: 10000 },
+          ],
+        },
+      },
     });
+    productIds.set(product.name, product.id);
+    console.log(
+      `✅ Đã tạo sản phẩm: ${product.name} (Base: ${product.basePrice}đ) kèm size S/M/L`,
+    );
   }
-  const products = [
-    {
-      id: '00000000-0000-4000-8000-000000000001',
-      name: 'Espresso',
-      description: 'Rich & bold',
-      basePrice: 30000,
-      stock: 20,
-      imageUrl:
-        'https://images.unsplash.com/photo-1502462041640-b3d7e50d0662?auto=format&fit=crop&w=400&q=80',
+  // KHỞI TẠO NGUYÊN LIỆU & CÔNG THỨC
+  await prisma.ingredient.createMany({
+    data: ingredientSeeds.map((item) => ({
+      ...item,
+      nameKey: item.name.toLowerCase(),
+    })),
+  });
+  console.log(`✅ Đã tạo ${ingredientSeeds.length} nguyên liệu cho kho`);
+
+  const allIngredients = await prisma.ingredient.findMany();
+  const ingredientByName = new Map(allIngredients.map((item) => [item.name, item]));
+  const recipeRows = recipeTemplates.flatMap((template) => {
+    const productId = productIds.get(template.productName);
+    if (!productId) return [];
+    return ([ProductSize.S, ProductSize.M, ProductSize.L] as ProductSize[]).flatMap(
+      (size) =>
+        template.ingredients.map((item) => ({
+          productId,
+          size,
+          ingredientId: ingredientByName.get(item.ingredientName)!.id,
+          quantity: recipeQuantity(item.quantity, size),
+        })),
+    );
+  });
+  await prisma.recipeIngredient.createMany({ data: recipeRows });
+  console.log(
+    `✅ Đã tạo ${recipeRows.length} dòng công thức cho ${recipeTemplates.length} món × 3 size`,
+  );
+
+  // Phiếu nhập mẫu để trang Nhập hàng có dữ liệu ngay sau khi seed.
+  const sampleItems = sampleStockImport.items.map((item) => {
+    const ingredient = ingredientByName.get(item.ingredientName);
+    if (!ingredient) {
+      throw new Error(`Thiếu nguyên liệu cho phiếu nhập mẫu: ${item.ingredientName}`);
+    }
+    return { ...item, ingredientId: ingredient.id };
+  });
+  await prisma.stockImport.create({
+    data: {
+      supplier: sampleStockImport.supplier,
+      note: sampleStockImport.note,
+      totalAmount: sampleStockImportTotal,
+      createdBy: sampleStockImport.createdBy,
+      items: {
+        create: sampleItems.map((item) => ({
+          ingredientId: item.ingredientId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          lineTotal: item.quantity * item.unitPrice,
+        })),
+      },
     },
-    {
-      id: '00000000-0000-4000-8000-000000000002',
-      name: 'Flat white',
-      description: 'Smooth & balanced',
-      basePrice: 45000,
-      stock: 20,
-      imageUrl:
-        'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      id: '00000000-0000-4000-8000-000000000003',
-      name: 'Cappuccino',
-      description: 'Soft & velvety',
-      basePrice: 45000,
-      stock: 20,
-      imageUrl:
-        'https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=400&q=80',
-    },
-    {
-      id: '00000000-0000-4000-8000-000000000004',
-      name: 'Iced latte',
-      description: 'Cool & creamy',
-      basePrice: 50000,
-      stock: 0,
-      imageUrl:
-        'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80',
-    },
-  ];
-  for (const product of products) {
-    await prisma.product.upsert({
-      where: { id: product.id },
-      update: {},
-      create: {
-        ...product,
-        sizes: { create: ['S', 'M', 'L'].map((sizeCode) => ({ sizeCode })) },
-        toppings: { create: toppings.map(({ id }) => ({ toppingId: id })) },
+  });
+  for (const item of sampleItems) {
+    await prisma.ingredient.update({
+      where: { id: item.ingredientId },
+      data: {
+        stock: { increment: item.quantity },
+        price: item.unitPrice,
+        version: { increment: 1 },
       },
     });
   }
-  await prisma.promotion.upsert({
-    where: { code: 'BREW10K' },
-    update: {},
-    create: {
-      code: 'BREW10K',
-      amount: 10000,
-      minOrderValue: 50000,
-      isActive: true,
-      validFrom: new Date('2026-01-01T00:00:00Z'),
-      expiresAt: new Date('2099-01-01T00:00:00Z'),
-    },
+  console.log(
+    `✅ Đã tạo phiếu nhập mẫu với ${sampleItems.length} nguyên liệu`,
+  );
+
+  // 6. Tạo Promotions (Vouchers)
+  await prisma.promotion.createMany({
+    data: [
+      {
+        code: "WELCOME10",
+        description: "Giảm 10% tối đa 20.000đ cho đơn từ 40.000đ",
+        discountPercent: 10,
+        maxDiscount: 20000,
+        minOrderAmount: 40000,
+        isActive: true,
+      },
+      {
+        code: "GIAM15K",
+        description: "Giảm thẳng 15.000đ cho đơn từ 60.000đ",
+        discountAmount: 15000,
+        minOrderAmount: 60000,
+        isActive: true,
+      },
+    ],
   });
+  console.log("✅ Đã tạo 2 voucher khuyến mãi: WELCOME10, GIAM15K");
+
+  console.log("🎉 Hoàn tất nạp dữ liệu mẫu cho BrewLite!");
 }
 
-// Upserts preserve existing stock, prices, and promotion configuration on reruns.
-if (
-  process.argv[1]?.replaceAll('\\', '/').endsWith('/prisma/seed.ts') ||
-  process.argv[1] === 'prisma/seed.ts'
-) {
-  const prisma = new PrismaClient();
-  try {
-    await seed(prisma);
-  } finally {
+main()
+  .catch((e) => {
+    console.error("❌ Lỗi khi seed DB:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
     await prisma.$disconnect();
-  }
-}
+  });

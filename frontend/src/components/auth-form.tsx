@@ -1,0 +1,177 @@
+'use client';
+
+import { FormEvent, useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { fetchApi } from '@/lib/api-client';
+import { useRequestCooldown } from '@/components/use-request-cooldown';
+
+interface PublicUser {
+  id: string;
+  email: string;
+  fullName: string | null;
+  loyaltyPoints: number;
+}
+
+interface AuthResult {
+  accessToken: string;
+  user: PublicUser;
+}
+
+export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [returnPath, setReturnPath] = useState('/');
+  const isRegister = mode === 'register';
+  const cooldown = useRequestCooldown('POST', isRegister ? '/auth/register' : '/auth/login');
+
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (next === '/cart' || next === '/checkout' || next === '/orders') setReturnPath(next);
+  }, []);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSubmitting || cooldown.blocked) return;
+    setError('');
+    if (isRegister && password !== confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    if (!cooldown.start()) return;
+    setIsSubmitting(true);
+    try {
+      const result = await fetchApi<AuthResult>(
+        isRegister ? '/auth/register' : '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+            ...(isRegister ? { fullName: fullName.trim() } : {}),
+          }),
+        },
+      );
+      localStorage.setItem('token', result.accessToken);
+      window.dispatchEvent(new Event('auth-changed'));
+      router.replace(returnPath);
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Không thể xác thực tài khoản');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="mx-auto grid max-w-4xl overflow-hidden rounded-ticket border-[1.5px] border-ink bg-white md:grid-cols-[0.9fr_1.1fr]">
+      <div className="relative hidden min-h-[560px] md:block">
+        <Image
+          src="/images/hero/phin-coffee.jpg"
+          alt="Phin cà phê nhỏ giọt"
+          fill
+          sizes="360px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-paper">
+          <p className="font-display text-2xl font-extrabold tracking-[-0.02em]">Đặt trước, tới lấy.</p>
+          <p className="mt-1 max-w-[16rem] text-sm leading-6 text-paper/80">
+            Mỗi ly được pha sau khi bạn xác nhận, nên tới quầy là có ngay.
+          </p>
+        </div>
+      </div>
+
+      <div className="p-6 sm:p-9">
+        <p className="kicker">{isRegister ? 'Tài khoản mới' : 'Chào mừng trở lại'}</p>
+        <h1 className="mt-2 text-2xl font-extrabold tracking-[-0.02em] text-ink sm:text-3xl">
+          {isRegister ? 'Tạo tài khoản BrewLite' : 'Đăng nhập BrewLite'}
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-content-secondary">
+          {isRegister
+            ? 'Tạo tài khoản để đặt đồ uống và tích lũy điểm.'
+            : 'Đăng nhập để tiếp tục đặt đồ uống.'}
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {isRegister && (
+            <label className="block text-sm font-medium text-ink">
+              Họ và tên
+              <input
+                className="field mt-1.5"
+                autoComplete="name"
+                maxLength={100}
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                required
+              />
+            </label>
+          )}
+          <label className="block text-sm font-medium text-ink">
+            Email
+            <input
+              className="field mt-1.5"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label className="block text-sm font-medium text-ink">
+            Mật khẩu
+            <input
+              className="field mt-1.5"
+              type="password"
+              autoComplete={isRegister ? 'new-password' : 'current-password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              minLength={6}
+              required
+            />
+          </label>
+          {isRegister && (
+            <label className="block text-sm font-medium text-ink">
+              Xác nhận mật khẩu
+              <input
+                className="field mt-1.5"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                minLength={6}
+                required
+              />
+            </label>
+          )}
+
+          {error && (
+            <p role="alert" className="rounded-ticket border-l-4 border-danger bg-danger-light px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          )}
+
+          <button type="submit" disabled={isSubmitting || cooldown.blocked} className="btn-primary w-full disabled:opacity-50">
+            {isSubmitting ? 'Đang xử lý...' : cooldown.label || (isRegister ? 'Tạo tài khoản' : 'Đăng nhập')}
+          </button>
+        </form>
+
+        <p className="mt-5 border-t border-dashed border-ink/25 pt-4 text-sm text-content-secondary">
+          {isRegister ? 'Đã có tài khoản?' : 'Chưa có tài khoản?'}{' '}
+          <Link
+            href={`${isRegister ? '/login' : '/register'}${returnPath !== '/' ? `?next=${encodeURIComponent(returnPath)}` : ''}`}
+            className="font-semibold text-primary hover:underline"
+          >
+            {isRegister ? 'Đăng nhập' : 'Đăng ký'}
+          </Link>
+        </p>
+      </div>
+    </section>
+  );
+}

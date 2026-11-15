@@ -1,15 +1,56 @@
-# ADR-001 — Một repo và backend phân lớp theo module
+# ADR-001: Dùng monorepo cho frontend và backend
 
-**Ngày:** 15/10/2026. **Trạng thái:** Ghi nhận phương án trong baseline hiện hành; chờ review nhóm, chưa triển khai cấu trúc đích.
+- **Trạng thái:** Đã chấp nhận
+- **Ngày:** 2026-10-20
+- **Người quyết định:** Nhóm BrewLite
 
 ## Bối cảnh
 
-[A2](../../references/Assignment2-BrewLite.pdf), trang PDF 3 và 6, kế thừa A1, bắt buộc Next.js/NestJS/PostgreSQL và cấu trúc apps/web, apps/api, docs. Nhóm 6 người cần chia việc và dùng một bộ tài liệu.
+Nhóm 4 người cùng phát triển một ứng dụng gồm Next.js (frontend), NestJS (backend) và
+Prisma/PostgreSQL. Cần chọn cách tổ chức mã nguồn sao cho:
+
+- Thay đổi API và UI trong cùng một pull request vẫn review được.
+- Tài liệu, Postman, Docker Compose và CI nằm cạnh mã nguồn.
+- Sinh viên mới clone một lần là chạy được, không phải quản lý nhiều repository.
 
 ## Quyết định
 
-Tiếp tục repo BrewLite. Frontend Next.js và backend NestJS cùng repo; backend phân controller/DTO/guard, service và truy cập DB, tổ chức module theo domain. Hiện vẫn ở frontend/backend; chuyển sang apps/web/apps/api là việc triển khai riêng phải cập nhật tất cả script, README, CI, Docker context và env liên quan. Không tạo project thứ ba, tách microservice hoặc thêm công cụ monorepo khi chưa cần.
+Giữ **một repository** với hai thư mục ứng dụng độc lập:
 
-## Đánh đổi và kiểm chứng
+```
+BrewLite/
+├── backend/      # NestJS + Prisma
+├── frontend/     # Next.js App Router
+├── docs/         # đặc tả, ADR, kịch bản kiểm thử
+├── postman/      # smoke test collection
+└── docker-compose.yml
+```
 
-Dễ review/tích hợp và truy vết trong một repo; backend dùng chung nên cần phối hợp schema và kiểm tra hồi quy khi ghép module. Sau khi chuyển cấu trúc, chạy install/lint/test/build và clone-run theo README; chưa thực hiện các bước này. [Kiến trúc](../README.md) và [deployment](../../diagrams/deployment.puml) phải được cập nhật cùng thay đổi thực tế.
+Mỗi thư mục có `package.json`, `node_modules`, Dockerfile và pipeline build riêng. Không
+dùng workspace tool (Turborepo/Nx) để giữ cấu hình đơn giản.
+
+## Hệ quả
+
+**Tích cực**
+
+- Một PR có thể cập nhật đồng thời API contract, backend, frontend và test.
+- CI chỉ cần checkout một lần; cache `node_modules` theo từng thư mục.
+- Dễ đồng bộ phiên bản tài liệu với mã nguồn.
+
+**Tiêu cực**
+
+- CI phải chạy hai bộ cài đặt/build; thời gian lâu hơn một app.
+- Dễ commit nhầm thay đổi giữa hai app nếu không tách nhánh rõ ràng.
+- Chưa có ràng buộc kiểu dùng chung; contract API phải đồng bộ thủ công.
+
+## Phương án đã cân nhắc
+
+1. **Hai repository riêng:** tách quyền truy cập tốt hơn nhưng khó review thay đổi xuyên suốt
+   và tăng công sức đồng bộ tài liệu. Bị loại vì quy mô nhóm nhỏ.
+2. **Monorepo có Nx/Turborepo:** tăng tốc build và chia sẻ package, nhưng thêm độ phức tạp
+   cấu hình không cần thiết ở học kỳ này.
+
+## Ghi chú
+
+Kế hoạch dài hạn (chưa thực hiện) là chuyển sang `apps/web` + `apps/api` + `packages/shared`
+khi có nhu cầu chia sẻ type thực sự. Việc tái cấu trúc được để sau khi hoàn tất đồ án.

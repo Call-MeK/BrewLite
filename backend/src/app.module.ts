@@ -1,21 +1,38 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { DatabaseModule } from './database/prisma.service.js';
-import { AuthModule } from './auth/auth.module.js';
-import { ProductsModule } from './products/products.module.js';
-import { HealthModule } from './health/health.module.js';
-import { CommerceModule } from './orders/commerce.module.js';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { PrismaModule } from "./prisma/prisma.module";
+import { AuthModule } from "./modules/auth/auth.module";
+import { ProductsModule } from "./modules/products/products.module";
+import { OrdersModule } from "./modules/orders/orders.module";
+import { PaymentsModule } from "./modules/payments/payments.module";
+import { CartModule } from "./modules/cart/cart.module";
+import { ScheduleModule } from "@nestjs/schedule";
+import { IngredientsModule } from "./modules/ingredients/ingredients.module";
+import { UsersModule } from './modules/users/users.module';
+import { RecipesModule } from './modules/recipes/recipes.module';
+import { StockImportsModule } from './modules/stock-imports/stock-imports.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { RequestLimitsInterceptor } from './common/interceptors/request-limits.interceptor';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
-    DatabaseModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    IngredientsModule,
+    PrismaModule,
     AuthModule,
     ProductsModule,
-    HealthModule,
-    CommerceModule,
+    OrdersModule,
+    PaymentsModule,
+    CartModule,
+    ScheduleModule.forRoot(),
+    UsersModule,
+    RecipesModule,
+    StockImportsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [{ provide: APP_INTERCEPTOR, useClass: RequestLimitsInterceptor }],
 })
 export class AppModule {}

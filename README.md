@@ -1,99 +1,114 @@
-﻿# BrewLite
+# ☕ BrewLite – Hệ Thống Đặt Cà Phê Không Dùng Tiền Mặt
 
-Ứng dụng web đặt cà phê và thanh toán mô phỏng cho môn Công nghệ Phần mềm.
-Frontend Next.js ở `frontend/`; REST API NestJS và PostgreSQL/Prisma ở `backend/`.
-Nguồn yêu cầu: [SRS](docs/requirements/srs.md), [API](API.md), [auth contract](docs/auth-contract.md), [tài liệu dự án](docs/README.md), [phân công nhóm](docs/team-assignments.md).
+> **Môn học:** Công nghệ Phần mềm | **Học kỳ:** I – Năm học 2026–2027  
+> **Kiến trúc:** Monorepo gồm **NestJS** (Backend REST API) + **Next.js** (Frontend App Router) + **PostgreSQL** (Docker)
 
-## Phần đã triển khai
+---
 
-- API sản phẩm, đăng ký/đăng nhập email, JWT, tạo/đọc đơn, mock payment WALLET/CARD và health.
-- PostgreSQL lưu tài khoản, catalogue, snapshot đơn, payment/idempotency key và điểm thưởng.
-- Transaction/version giữ kho, payment lỗi trả kho, retry cùng đơn giữ lại kho. Khuyến mãi và loyalty theo SRS.
-- Menu/chi tiết và form auth gọi API thật. Hàm frontend cho mọi API nằm tại [api.ts](frontend/src/lib/api.ts).
+## Chạy dự án bằng Docker
 
-Giỏ hàng hiện vẫn là giao diện mẫu. Trang checkout, lịch sử đơn, PWA, production và nghiệm thu toàn bộ SRS là các việc tiếp theo; có API không đồng nghĩa đã hoàn thành các luồng giao diện đó.
-
-## Cài đặt local
-
-Yêu cầu Node.js 24 LTS, npm và PostgreSQL. Chạy từ root bằng PowerShell; macOS/Linux dùng `npm` và `cp` tương ứng.
+Mở Docker Desktop, sau đó chạy tại thư mục gốc:
 
 ```powershell
-npm.cmd --prefix frontend ci
-npm.cmd --prefix backend ci
-if (!(Test-Path frontend/.env.local)) { Copy-Item frontend/.env.example frontend/.env.local }
-if (!(Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
+Copy-Item .env.example .env # chỉ tạo lần đầu
+docker compose up --build -d
 ```
 
-Điền cấu hình trước khi chạy backend:
+Mở http://localhost:3000; API ở http://localhost:4000/api/v1. Docker chạy cả frontend, backend và PostgreSQL; không cần chạy npm trên máy.
 
-| File | Biến | Giá trị/cách dùng |
-| --- | --- | --- |
-| `frontend/.env.local` | `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:3001`; chỉ origin, không `/api`. |
-| `backend/.env` | `PORT` | `3001`. |
-| `backend/.env` | `FRONTEND_ORIGIN` | `http://localhost:3000`; đổi thành origin web thực tế khi deploy. |
-| `backend/.env` | `DATABASE_URL` | `postgresql://<user>:<password>@localhost:5432/brewlite`; database phải tồn tại. |
-| `backend/.env` | `JWT_SECRET` | Secret ngẫu nhiên ít nhất 32 byte, chỉ ở backend. |
-| `backend/.env` | `JWT_EXPIRES_IN` | Số giây nguyên dương, mặc định `3600`. |
-| `backend/.env` | `MOCK_PAYMENT_RESULT` | `SUCCEEDED` hoặc `FAILED`; mặc định thành công, không nhận từ client. |
+Nếu chạy backend trực tiếp bằng npm (không qua Docker), Prisma chỉ đọc `backend/.env`:
+`Copy-Item .env.example backend/.env`.
 
-Tạo JWT secret riêng để điền vào file local:
+Các cổng 3000, 4000 và 5433 phải còn trống. Nếu 5433 đã được sử dụng, đổi `POSTGRES_PORT` trong `.env` sang cổng trống. Nếu 3000 hoặc 4000 đã được sử dụng, dừng ứng dụng đang chiếm cổng trước khi chạy.
 
 ```powershell
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+docker compose ps
+docker compose logs -f
+docker compose down
 ```
 
-Không commit `.env`/`.env.local`; không đặt secret trong `NEXT_PUBLIC_*`.
-Backend đọc `.env` từ thư mục backend; biến terminal có ưu tiên cao hơn.
+Dữ liệu PostgreSQL được giữ trong volume khi dùng `docker compose down`. Sau khi thay đổi mã nguồn, chạy lại `docker compose up --build -d`.
 
-```powershell
-npm.cmd --prefix backend run db:generate
-npm.cmd --prefix backend run db:migrate
-npm.cmd --prefix backend run db:seed
+---
+
+## 📁 CẤU TRÚC MONOREPO
+
+```
+BrewLite/
+├── backend/                  # NestJS API (Port 4000)
+│   ├── src/
+│   │   ├── common/           # Interceptor, Exception Filter
+│   │   ├── modules/          # auth, products, orders, payments
+│   │   └── prisma/           # Prisma service & client
+│   └── prisma/schema.prisma  # Định nghĩa CSDL PostgreSQL
+├── frontend/                 # Next.js App Router (Port 3000)
+│   ├── src/
+│   │   ├── app/              # Trang chủ, menu, giỏ hàng, đặt hàng
+│   │   ├── components/       # ui/ (dùng chung) & features/ (nghiệp vụ)
+│   │   └── lib/api-client.ts # Fetch wrapper chuẩn hóa
+├── docs/                     # Quy chuẩn làm việc nhóm
+│   ├── requirements/         # Bối cảnh, phạm vi, SRS
+│   ├── architecture/adr/     # Quyết định kiến trúc
+│   ├── diagrams/             # Sequence diagram
+│   ├── git-convention.md     # Quy tắc nhánh & commit
+│   ├── naming-convention.md  # Tiêu chuẩn đặt tên API & DB
+│   ├── deployment.md         # Triển khai, CI, rollback
+│   ├── traceability-matrix.md
+│   └── checklist-review.md   # Tiêu chí review code trước khi merge
+├── Bai_2_UML/                # Tổng hợp sơ đồ UML bài tập
+├── docker-compose.yml        # PostgreSQL container
+├── .env.example              # Mẫu biến môi trường
+└── README.md
 ```
 
-Seed tạo bốn sản phẩm, size S/M/L, hai topping và mã `BREW10K` giảm 10.000đ cho subtotal từ 50.000đ. Iced latte có stock 0 để minh họa hết hàng. Seed lại giữ nguyên giá/kho/cấu hình hiện có; migration không reset dữ liệu. Không có tài khoản mặc định.
+---
 
-## Chạy ứng dụng
+## 📌 QUY ƯỚC LÀM VIỆC DÀNH CHO THÀNH VIÊN
+Mới vào dự án? Đọc [docs/README.md](docs/README.md) trước — bản đồ toàn bộ tài liệu, chọn đúng file cần đọc.
 
-Hai terminal riêng:
+Trước khi bắt tay vào code các tính năng tiếp theo, tất cả thành viên bắt buộc đọc qua các tài liệu trong thư mục `docs/`:
+1. [Quy chuẩn Git & Commit](docs/git-convention.md)
+2. [Quy chuẩn đặt tên API & Database](docs/naming-convention.md)
+3. [Checklist review code trước khi merge](docs/checklist-review.md)
 
-```powershell
-# Terminal 1: web :3000
-npm.cmd --prefix frontend run dev
-```
+## 📚 TÀI LIỆU ĐỒ ÁN
 
-```powershell
-# Terminal 2: API :3001
-npm.cmd --prefix backend run start:dev
-```
+| Tài liệu | Nội dung |
+|---|---|
+| [Bối cảnh và phạm vi](docs/requirements/context-and-scope.md) | Actor, mục tiêu, trong/ngoài phạm vi |
+| [SRS](docs/requirements/srs.md) | Yêu cầu chức năng FR-01 → FR-11, phi chức năng NFR |
+| [Ma trận truy vết](docs/traceability-matrix.md) | Yêu cầu → thiết kế → mã nguồn → kiểm thử |
+| [Kịch bản kiểm thử](docs/test-scenarios/test-scenarios.md) | Test case theo feature và E2E |
+| [Hợp đồng API Payment](docs/payment/api-contract-payment.md) | ZaloPay Sandbox, callback, idempotency |
+| [Triển khai và rollback](docs/deployment.md) | CI, môi trường, quy trình deploy, rollback |
+| [ADR-001](docs/architecture/adr/001-monorepo.md) | Vì sao dùng monorepo |
+| [ADR-002](docs/architecture/adr/002-payment-zalopay-sandbox.md) | Vì sao bỏ mock, chỉ dùng ZaloPay |
+| [Sequence checkout](docs/diagrams/sequence-checkout.puml) | Luồng đặt hàng và thanh toán |
+| [Sơ đồ triển khai](docs/architecture/deployment-diagram.puml) | Thành phần triển khai mục tiêu |
 
-Mở http://localhost:3000/menu, đăng ký tại `/register`, đăng nhập tại `/login`.
-Đăng ký không tự đăng nhập. Token chỉ ở bộ nhớ React; reload/đóng tab cần login lại. Xem [ADR-003](docs/architecture/adr/003-auth-token.md).
+## 🚀 CI VÀ TRIỂN KHAI
 
-```powershell
-Invoke-RestMethod http://localhost:3001/health
-Invoke-RestMethod http://localhost:3001/products
-```
+- CI chạy trên nhánh `main` qua `.github/workflows/ci.yml`: PostgreSQL service → Prisma
+  generate/migrate → test backend → build backend/frontend.
+- Chạy local bằng Docker: `docker compose up --build -d`.
+- Quy trình deploy, biến môi trường và rollback: xem [docs/deployment.md](docs/deployment.md).
+- **Môi trường demo công khai:**
+  - Frontend: <https://brewlite-acme-1b6f1.vercel.app>
+  - API: <https://brewlite-api-u2jb.onrender.com/api/v1> (health: `/health`)
+  - Database: Neon PostgreSQL (Singapore), migrate + seed bằng Prisma.
+- Cập nhật gần nhất: 13/11/2026 (kiểm tra CD backend).
+- Thanh toán chỉ dùng ZaloPay Sandbox; mock payment đã được gỡ (xem ADR-002). Trên môi trường
+  demo, sandbox đã bật bằng bộ key sandbox công khai (`app_id=2554`); giao dịch tạo được
+  `paymentUrl` và đối soát ở `/admin/payments`. Callback công khai có thể không được app demo
+  gọi tới, khi đó dùng nút “Kiểm tra kết quả” (`sync`).
 
-Health trả 200 khi PostgreSQL trả lời, 503 khi DB không sẵn sàng. `GET /` vẫn trả `Hello World!`, không thay health. API riêng dùng `Authorization: Bearer <accessToken>`; POST order/payment còn cần `Idempotency-Key` UUID riêng mỗi phép toán. Request/response và retry: [API.md](API.md).
+## Tài khoản test
 
-## Kiểm tra
+Sau khi chạy `npm run prisma:seed` (hoặc `npx prisma db seed` trong `backend/`), hệ thống có sẵn 2 tài khoản trong `backend/prisma/seed.ts`:
 
-```powershell
-npm.cmd --prefix frontend test
-npm.cmd --prefix frontend run lint
-npm.cmd --prefix frontend run build
-npm.cmd --prefix backend test
-npm.cmd --prefix backend run lint
-npm.cmd --prefix backend run build
-npm.cmd --prefix backend run test:e2e
-```
+| Vai trò | Email | Mật khẩu | Ghi chú |
+|---|---|---|---|
+| Khách hàng | `demo@brewlite.test` | `Demo@12345` | Có sẵn 120 điểm loyalty, đặt hàng bình thường |
+| Quản trị viên | `admin@brewlite.test` | `Admin@12345` | Truy cập trang Admin (`/admin/users`, quản lý sản phẩm, đơn hàng, kho) |
 
-`test:e2e` tự tạo PostgreSQL tạm bằng `embedded-postgres`, áp migration/seed, chạy HTTP tests rồi dừng/xóa cluster tạm. Lệnh không dùng hoặc reset `DATABASE_URL` local, không cần Docker; chạy bằng tài khoản thường vì PostgreSQL không chạy dưới root. Bao gồm auth, validation, ownership, tranh kho, concurrent/replay keys, payment lỗi/retry, snapshot, promotion, loyalty và hủy nội bộ. Đây là kiểm thử API, chưa phải browser E2E checkout theo SRS.
-
-Bản build local: chạy `npm.cmd --prefix frontend start` và `npm.cmd --prefix backend run start:prod` ở hai terminal sau khi build. Đảm bảo port 3000/3001 trống; restart dev server sau khi đổi env và build lại frontend nếu đổi biến public trong production.
-
-## Làm việc nhóm
-
-Chỉ có một Git repository ở root. Dùng branch riêng và Pull Request, commit Conventional Commits (`feat:`, `fix:`, `docs:`, `test:`, `chore:`). Đối chiếu [traceability](docs/traceability-matrix.md) và acceptance criteria trước khi ghi nghiệm thu.
-Remote: https://github.com/Call-MeK/BrewLite.git.
+> **Lưu ý:** Đây là tài khoản demo công khai chỉ dùng cho môi trường local/test. Không dùng mật khẩu này trên production. Nếu muốn đổi mật khẩu, hãy đăng nhập rồi đổi trong phần hồ sơ cá nhân.
