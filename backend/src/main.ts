@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
+import { configureApplication } from './common/configure-app.js';
 
 if (existsSync('.env')) {
   loadEnvFile('.env');
@@ -10,9 +11,7 @@ if (existsSync('.env')) {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: 'http://localhost:3000',
-  });
+  configureApplication(app);
 
   const port = Number(process.env.PORT ?? 3001);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {

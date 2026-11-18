@@ -1,8 +1,3 @@
-const PHONE_RE = /^(0|\+84)\d{9}$/;
-
-/** "090 123 4567" -> "0901234567" */
-export const normalizePhone = (v: string) => v.replace(/\s/g, "");
-
-export const isValidPhone = (v: string) => PHONE_RE.test(normalizePhone(v));
-
-export const MIN_PASSWORD = 6;
+export const normalizeEmail = (value: string) => value.trim().toLowerCase();
+export const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+export const isValidPassword = (value: string) => value.length >= 8;

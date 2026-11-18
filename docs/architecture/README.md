@@ -1,6 +1,6 @@
 # BrewLite — Kiến trúc đề xuất
 
-**Ngày:** 15/10/2026. **Trạng thái:** Tài liệu thiết kế dựa trên baseline đã có; chờ nhóm review, chưa nghiệm thu Task 3. Chưa chọn hosting, triển khai hoặc đo hiệu năng.
+**Cập nhật:** 19/10/2026. **Trạng thái:** API đã triển khai trong layout hiện tại `frontend/` và `backend/`; xem [bằng chứng](../traceability-matrix.md#bằng-chứng-tích-hợp-api-19102026). Vẫn chờ review nhóm/nghiệm thu Task 3, hosting và đo hiệu năng.
 
 Nguồn: [SRS](../requirements/srs.md), [UC-01](../requirements/use-case-checkout.md), [rubric A2 Task 3](../project-overview.md). Dùng kiến trúc phân lớp trong một backend NestJS để nhóm sinh viên dễ làm và tích hợp.
 
@@ -9,9 +9,9 @@ Nguồn: [SRS](../requirements/srs.md), [UC-01](../requirements/use-case-checkou
 | Thành phần | Trách nhiệm | Đường dẫn và trạng thái |
 | --- | --- | --- |
 | Next.js / PWA | Menu, tùy chọn, giỏ, auth, checkout, lịch sử; mobile-first, manifest/icon; không thanh toán offline hoặc cache dữ liệu auth/đơn nhạy cảm. | Hiện tại `frontend/`; đích A2 `apps/web/`; chưa hoàn thiện luồng. |
-| NestJS REST | Controller nhận DTO; class-validator kiểm dữ liệu; JWT guard xác thực; service thực hiện nghiệp vụ và kiểm tra owner; không tin giá/userId từ client. | Hiện tại `backend/`; đích `apps/api/`; mới có AppModule/AppController/AppService scaffold. |
+| NestJS REST | Controller nhận DTO; class-validator kiểm dữ liệu; JWT guard xác thực; service thực hiện nghiệp vụ và kiểm tra owner; không tin giá/userId từ client. | `backend/src/auth`, `products`, `orders`, `payments`, `health`; đích `apps/api/` là việc riêng. |
 | Modules nghiệp vụ | Auth, Products, Orders, Payments, Promotions, Loyalty; tách trách nhiệm trong cùng tiến trình. | Thiết kế tại [module/ERD](../diagrams/brewlite-uml.md), chưa là module đã viết. |
-| PostgreSQL / Prisma | Dữ liệu bền vững, migration/seed, transaction, unique và version chống ghi trùng/vượt kho. | Chưa có schema/migration được kiểm chứng. Không mở DB production trực tiếp ra Internet. |
+| PostgreSQL / Prisma | Dữ liệu bền vững, migration/seed, transaction, unique và version chống ghi trùng/vượt kho. | `backend/prisma` có schema/migrations/seed và kiểm thử PostgreSQL tạm. Production chưa triển khai. |
 | Mock Payment | Hàm nội bộ xác định, server kiểm soát success/failure cho WALLET/CARD; tiền lấy từ Order.total. | Thiết kế, không gọi mạng hoặc thu tiền thật. |
 | CI/CD / Docker | Compose web/API/DB local; PR kiểm install/lint/unit/build; CD image có tag, migration an toàn, deploy, smoke và rollback. | Chưa có pipeline, Compose hoặc production được nghiệm thu. |
 
@@ -36,7 +36,7 @@ UI → controller/DTO/JWT guard → service nghiệp vụ → Prisma/PostgreSQL.
 | --- | --- | --- |
 | [001 — Monorepo và phân lớp](adr/001-monorepo.md) | Một repo, một API theo module; Next.js/NestJS/PostgreSQL. | Đơn giản hóa tích hợp; web/API có thể triển khai riêng, chưa cần microservices hoặc công cụ monorepo mới. |
 | [002 — Dữ liệu và mock payment](adr/002-data-and-payment.md) | Prisma, transaction/version/unique, snapshot và mock nội bộ. | Phải có integration test PostgreSQL; gateway thật cần thiết kế lại side effect. |
-| [003 — Token auth](adr/003-auth-token.md) | Bcrypt + JWT; TTL/cách lưu token còn mở. | Phải chốt trước triển khai auth, không coi ví dụ 3600 giây là quyết định. |
+| [003 — Token auth](adr/003-auth-token.md) | Bcrypt + JWT; TTL cấu hình, mặc định 3600 giây; token trong bộ nhớ React. | Reload cần login lại; không có refresh token hoặc lưu token bền trên browser. |
 
 Mô hình này ưu tiên dễ hiểu và đủ yêu cầu đề; backend/DB là điểm dùng chung nên lỗi có thể ảnh hưởng toàn luồng. Kiểm tra phục hồi, hiệu năng < 500 ms với dữ liệu mẫu và bảo mật bằng test thật, không suy ra từ sơ đồ.
 

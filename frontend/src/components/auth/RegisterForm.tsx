@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import TextField from "@/components/ui/TextField";
-import { isValidPhone, MIN_PASSWORD, normalizePhone } from "@/lib/validators";
+import { isValidEmail, isValidPassword } from "@/lib/validators";
+import { ApiError, register } from "@/lib/api";
 import AuthSwitch from "./AuthSwitch";
 import { authLayout } from "./auth.layout";
 import { authCopy } from "./auth.copy";
@@ -11,42 +13,48 @@ import { authCopy } from "./auth.copy";
 const t = authCopy.register;
 
 export default function RegisterForm() {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+  const router = useRouter();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const pending = useRef<AbortController | null>(null);
+  useEffect(() => () => pending.current?.abort(), []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
 
     const next: Record<string, string> = {};
-    if (name.trim().length < 2) next.name = t.errors.name;
-    if (!isValidPhone(phone)) next.phone = t.errors.phone;
-    if (password.length < MIN_PASSWORD) next.password = t.errors.password;
+    if (!isValidEmail(email)) next.email = t.errors.email;
+    if (!isValidPassword(password)) next.password = t.errors.password;
     if (password !== confirm) next.confirm = t.errors.confirm;
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
     setLoading(true);
+    const controller = new AbortController();
+    pending.current = controller;
     try {
-      // TODO: gọi API đăng ký (POST /auth/register)
-      console.log({ name: name.trim(), phone: normalizePhone(phone), password });
+      await register({ email, password }, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      setPassword("");
+      setConfirm("");
+      router.replace("/login");
+    } catch (error) {
+      if (!controller.signal.aborted) setErrors({ form: error instanceof ApiError ? error.message : "Không thể đăng ký. Vui lòng thử lại." });
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className={authLayout.form}>
       <div className={authLayout.fields}>
-        <TextField id="name" label={t.namePlaceholder} placeholder={t.namePlaceholder}
-          value={name} onChange={(e) => setName(e.target.value)}
-          autoComplete="name" error={errors.name} />
-        <TextField id="phone" label={t.phonePlaceholder} placeholder={t.phonePlaceholder}
-          type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-          autoComplete="tel" error={errors.phone} />
+        <TextField id="email" label={t.emailPlaceholder} placeholder={t.emailPlaceholder}
+          type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email" error={errors.email} />
         <TextField id="password" label={t.passwordPlaceholder} placeholder={t.passwordPlaceholder}
           type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password" error={errors.password} />
@@ -54,6 +62,8 @@ export default function RegisterForm() {
           type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
           autoComplete="new-password" error={errors.confirm} />
       </div>
+
+      {errors.form && <p role="alert" className="mt-3 text-xs text-[color:var(--bw-error)]">{errors.form}</p>}
 
       <div className={authLayout.actions}>
         <Button type="submit" loading={loading} fullWidth={false} className="min-w-40">

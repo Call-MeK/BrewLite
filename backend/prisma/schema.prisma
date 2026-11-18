@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_FAILED
+  PAID
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum InventoryStatus {
+  RESERVED
+  COMMITTED
+  RELEASED
+}
+
+enum PaymentMethod {
+  WALLET
+  CARD
+}
+
+enum PaymentStatus {
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum LoyaltyKind {
+  EARN
+  REVERSAL
+}
+
+model User {
+  id            String               @id @default(uuid()) @db.Uuid
+  email         String               @unique
+  passwordHash  String
+  loyaltyPoints Int                  @default(0)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  orders        Order[]
+  payments      Payment[]
+  loyalty       LoyaltyTransaction[]
+}
+
+model Product {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  description String
+  imageUrl    String
+  basePrice   Int
+  stock       Int
+  version     Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  sizes       ProductSize[]
+  toppings    ProductTopping[]
+  orderItems  OrderItem[]
+}
+
+model SizeOption {
+  code       String        @id
+  priceDelta Int
+  products   ProductSize[]
+  orderItems OrderItem[]
+}
+
+model Topping {
+  id         String             @id @default(uuid()) @db.Uuid
+  name       String
+  price      Int
+  products   ProductTopping[]
+  orderItems OrderItemTopping[]
+}
+
+model ProductSize {
+  productId String     @db.Uuid
+  sizeCode  String
+  product   Product    @relation(fields: [productId], references: [id])
+  size      SizeOption @relation(fields: [sizeCode], references: [code])
+
+  @@id([productId, sizeCode])
+}
+
+model ProductTopping {
+  productId String  @db.Uuid
+  toppingId String  @db.Uuid
+  product   Product @relation(fields: [productId], references: [id])
+  topping   Topping @relation(fields: [toppingId], references: [id])
+
+  @@id([productId, toppingId])
+}
+
+model Promotion {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique
+  amount        Int
+  minOrderValue Int
+  isActive      Boolean  @default(true)
+  validFrom     DateTime
+  expiresAt     DateTime
+  orders        Order[]
+}
+
+model Order {
+  id                     String               @id @default(uuid()) @db.Uuid
+  userId                 String               @db.Uuid
+  promotionId            String?              @db.Uuid
+  status                 OrderStatus          @default(PENDING)
+  inventoryStatus        InventoryStatus      @default(RESERVED)
+  subtotal               Int
+  discount               Int
+  total                  Int
+  voucherCodeSnapshot    String?
+  creationIdempotencyKey String               @db.Uuid
+  requestHash            String
+  creationResponse       Json
+  version                Int                  @default(0)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  user                   User                 @relation(fields: [userId], references: [id])
+  promotion              Promotion?           @relation(fields: [promotionId], references: [id])
+  items                  OrderItem[]
+  payments               Payment[]
+  loyalty                LoyaltyTransaction[]
+
+  @@unique([userId, creationIdempotencyKey])
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id                  String             @id @default(uuid()) @db.Uuid
+  orderId             String             @db.Uuid
+  productId           String             @db.Uuid
+  sizeCode            String
+  quantity            Int
+  productNameSnapshot String
+  sizePriceSnapshot   Int
+  unitPrice           Int
+  lineTotal           Int
+  order               Order              @relation(fields: [orderId], references: [id])
+  product             Product            @relation(fields: [productId], references: [id])
+  size                SizeOption         @relation(fields: [sizeCode], references: [code])
+  toppings            OrderItemTopping[]
+}
+
+model OrderItemTopping {
+  orderItemId   String    @db.Uuid
+  toppingId     String    @db.Uuid
+  nameSnapshot  String
+  priceSnapshot Int
+  orderItem     OrderItem @relation(fields: [orderItemId], references: [id])
+  topping       Topping   @relation(fields: [toppingId], references: [id])
+
+  @@id([orderItemId, toppingId])
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  orderId        String        @db.Uuid
+  userId         String        @db.Uuid
+  idempotencyKey String        @db.Uuid
+  requestHash    String
+  amount         Int
+  method         PaymentMethod
+  status         PaymentStatus
+  response       Json
+  createdAt      DateTime      @default(now())
+  order          Order         @relation(fields: [orderId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+
+  @@unique([userId, idempotencyKey])
+}
+
+model LoyaltyTransaction {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @db.Uuid
+  orderId   String      @db.Uuid
+  kind      LoyaltyKind
+  points    Int
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+  order     Order       @relation(fields: [orderId], references: [id])
+
+  @@unique([orderId, kind])
+}

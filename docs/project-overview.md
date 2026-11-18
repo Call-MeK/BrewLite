@@ -39,7 +39,7 @@ Những mục ghi **“đề xuất”** là quyết định của bản thiết
 | ------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | `BrewLite/frontend`                                     | Scaffold Next.js và trang giới thiệu; chưa có luồng mua hàng               | Giữ làm nền frontend.                                      |
 | `BrewLite/backend`                                      | Scaffold NestJS, `GET /` trả `Hello World!`, test endpoint mẫu             | Giữ làm nền backend; chưa tính là có API nghiệp vụ.        |
-| Spec ngày 09/10 trong `BrewLite/docs/superpowers/specs` | Có thiết kế order, payment, stock, voucher, loyalty và phân vai 6 người    | Dùng làm tài liệu tham khảo, cập nhật phần lệch hai PDF.   |
+| [SRS hiện hành](requirements/srs.md) và [phân công nhóm](team-assignments.md) | Yêu cầu chung A1/A2, nghiệp vụ và vai trò đã được hợp nhất từ bản nháp cũ | Dùng làm nguồn hiện hành; các spec/plan cũ đã được dọn. |
 | `brewlite-assignment2/docs/requirements`                | Có bản nháp context, SRS và checkout; chưa có code sản phẩm                | Tận dụng cấu trúc FR/NFR, acceptance criteria và use-case. |
 | `brewlite-assignment2/docs/diagrams`                    | Có nguồn PlantUML; SVG hiện là bản overview Graphviz theo ghi chú của repo | Phải xuất lại UML từ nguồn và kiểm tra hình trước khi nộp. |
 | Kiểm tra Python của assignment2                         | Kiểm tra cấu trúc tài liệu                                                 | Không dùng thay unit/integration/E2E của sản phẩm.         |

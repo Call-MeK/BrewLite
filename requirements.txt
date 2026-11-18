@@ -1,3 +1,0 @@
-Git
-npm
-Node.js 24 LTS
